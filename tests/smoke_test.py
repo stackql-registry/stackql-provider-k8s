@@ -107,7 +107,9 @@ class Smoke:
     # ------------------------------------------------------------------ core
     def q(self, sql: str):
         try:
-            if sql.lstrip().upper().startswith(("SELECT", "SHOW", "DESCRIBE")):
+            # RETURNING statements produce rows - route them through the
+            # query path (executeStmt returns only a status message)
+            if sql.lstrip().upper().startswith(("SELECT", "SHOW", "DESCRIBE")) or "RETURNING" in sql.upper():
                 out = self.sq.execute(sql)
             else:
                 out = self.sq.executeStmt(sql)
