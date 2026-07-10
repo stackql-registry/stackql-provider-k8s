@@ -1,42 +1,85 @@
-See also:   
+See also:
 [[` SHOW `]](https://stackql.io/docs/language-spec/show) [[` DESCRIBE `]](https://stackql.io/docs/language-spec/describe)  [[` REGISTRY `]](https://stackql.io/docs/language-spec/registry)
-* * * 
+* * *
 
 ## Installation
 
-To pull the latest version of the `REPLACEME` provider, run the following command:  
+To pull the latest version of the `k8s` provider, run the following command:
 
 ```bash
-REGISTRY PULL REPLACEME;
+REGISTRY PULL k8s;
 ```
-> To view previous provider versions or to pull a specific provider version, see [here](https://stackql.io/docs/language-spec/registry).  
+> To view previous provider versions or to pull a specific provider version, see [here](https://stackql.io/docs/language-spec/registry).
+
+## Connecting to a cluster
+
+The API server endpoint is supplied in the `WHERE` clause of each query using two server parameters:
+
+- <CopyableCode code="cluster_addr" /> - hostname and port of the Kubernetes API server endpoint (default: `localhost`)
+- <CopyableCode code="protocol" /> - `http` or `https` (default: `https`)
+
+```sql
+SELECT json_extract(metadata, '$.name') AS name,
+       json_extract(status, '$.phase') AS phase
+FROM k8s.core.pods
+WHERE protocol = 'http'
+AND cluster_addr = 'localhost:8001'
+AND namespace = 'default';
+```
+
+> `cluster_addr` must currently be a dot-free hostname (`localhost`, or a hosts-file alias for a remote endpoint) - bare IP addresses and fully qualified domain names are not yet supported for direct connections. The `kubectl proxy` workflow below is unaffected.
 
 ## Authentication
 
-The following system environment variables are used for authentication by default:  
+The provider default is `null_auth` (no credentials), designed for the `kubectl proxy` workflow - the proxy authenticates to the cluster using your kubeconfig (including cloud credential plugins for EKS, GKE and AKS), and StackQL connects to the local proxy port with no additional configuration:
 
-- <CopyableCode code="REPLACEME" /> - REPLACEME API token (see <a href="REPLACEME>How to Create a Personal Access Token</a>)
-  
-These variables are sourced at runtime (from the local machine or as CI variables/secrets).  
+```bash
+kubectl proxy --port=8001
+```
+
+then in a separate terminal:
+
+```bash
+stackql shell
+```
+
+```sql
+SELECT json_extract(metadata, '$.name') AS name
+FROM k8s.core.namespaces
+WHERE protocol = 'http' AND cluster_addr = 'localhost:8001';
+```
+
+This works with any cluster your `kubectl` can reach and is the recommended vector.
 
 <details>
 
-<summary>Using different environment variables</summary>
+<summary>Direct access using a bearer token</summary>
 
-To use different environment variables (instead of the defaults), use the `--auth` flag of the `stackql` program.  For example:  
+To connect directly to the API server (no proxy), supply a bearer token via the `--auth` flag using the <CopyableCode code="K8S_TOKEN" /> environment variable, along with the cluster CA bundle:
 
 ```bash
 
-AUTH='{ "REPLACEME": { "type": "bearer",  "credentialsenvvar": "REPLACEME" }}'
-stackql shell --auth="${AUTH}"
+export K8S_TOKEN='eyJhbGciOiJ...'
+AUTH='{ "k8s": { "type": "bearer", "credentialsenvvar": "K8S_TOKEN" }}'
+stackql shell --auth="${AUTH}" --tls.CABundle cluster-ca.pem
 
 ```
-or using PowerShell:  
+or using PowerShell:
 
 ```powershell
 
-$Auth = "{ 'REPLACEME': { 'type': 'bearer',  'credentialsenvvar': 'REPLACEME' }}"
-stackql.exe shell --auth=$Auth
+$env:K8S_TOKEN = 'eyJhbGciOiJ...'
+$Auth = "{ 'k8s': { 'type': 'bearer', 'credentialsenvvar': 'K8S_TOKEN' }}"
+stackql.exe shell --auth=$Auth --tls.CABundle cluster-ca.pem
 
 ```
+
+A service account token can be created with `kubectl create token <serviceaccount>`. For managed clusters, obtain a token from the platform credential helper and pass it the same way, for example:
+
+```bash
+export K8S_TOKEN=$(aws eks get-token --cluster-name my-cluster | jq -r .status.token)
+```
+
+> Tokens issued by cloud credential helpers are short lived (typically 15 minutes) and are not refreshed automatically - for long running sessions prefer the `kubectl proxy` vector. Client certificate (mTLS) authentication and native kubeconfig resolution are not currently supported; use `kubectl proxy` for those clusters. Alternatively `--tls.allowInsecure=true` skips CA verification (not recommended).
+
 </details>

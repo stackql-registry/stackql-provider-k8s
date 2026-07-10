@@ -1,19 +1,20 @@
 ---
-title: REPLACEME
+title: k8s
 hide_title: false
 hide_table_of_contents: false
 keywords:
-  - REPLACEME
+  - k8s
+  - kubernetes
   - stackql
   - infrastructure-as-code
   - configuration-as-data
   - cloud inventory
-description: Query, deploy and manage REPLACEME resources using SQL
+description: Query, deploy and manage Kubernetes resources using SQL
 custom_edit_url: null
-image: /img/stackql-REPLACEME-provider-featured-image.png
+image: /img/stackql-k8s-provider-featured-image.png
 id: 'provider-intro'
 ---
 
 import CopyableCode from '@site/src/components/CopyableCode/CopyableCode';
 
-REPLACEME with description for the provider.
+Query, provision and operate Kubernetes cluster resources - pods, deployments, services, config maps, RBAC and every other built-in control plane API group - using SQL. The provider works against any conformant cluster (kind, EKS, GKE, AKS, OpenShift, k3s, bare metal) and covers all built-in API groups including subresources such as `status`, `scale` and `log`.

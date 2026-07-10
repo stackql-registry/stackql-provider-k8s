@@ -1,0 +1,22 @@
+{
+  "core": "core",
+  "apps": "apps",
+  "batch": "batch",
+  "autoscaling": "autoscaling",
+  "policy": "policy",
+  "networking.k8s.io": "networking",
+  "storage.k8s.io": "storage",
+  "rbac.authorization.k8s.io": "rbac",
+  "apiextensions.k8s.io": "apiextensions",
+  "apiregistration.k8s.io": "apiregistration",
+  "admissionregistration.k8s.io": "admissionregistration",
+  "certificates.k8s.io": "certificates",
+  "coordination.k8s.io": "coordination",
+  "discovery.k8s.io": "discovery",
+  "events.k8s.io": "events",
+  "flowcontrol.apiserver.k8s.io": "flowcontrol",
+  "node.k8s.io": "node",
+  "scheduling.k8s.io": "scheduling",
+  "authentication.k8s.io": "authentication",
+  "authorization.k8s.io": "authorization"
+}

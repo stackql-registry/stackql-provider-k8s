@@ -9,39 +9,26 @@ keywords:
   - infrastructure-as-code
   - configuration-as-data
   - cloud inventory
-description: Query, deploy and manage Kubernetes resources using SQL
+description: Query, deploy and manage k8s resources using SQL
 custom_edit_url: null
-image: /img/services/stackql-k8s-provider-featured-image.png
+image: /img/stackql-k8s-provider-featured-image.png
 ---
 
-apiextensions  
-    
-:::info Service Summary
+apiextensions service documentation.
 
-<div class="row">
-<div class="providerDocColumn">
-<span>total resources:&nbsp;<b>1</b></span><br />
-<span>total selectable resources:&nbsp;<b>1</b></span><br />
-<span>total methods:&nbsp;<b>1</b></span><br />
-</div>
-</div>
+:::info[Service Summary]
+
+total resources: __3__  
 
 :::
-
-## Overview
-<table><tbody>
-<tr><td><b>Name</b></td><td><code>k8s.apiextensions</code></td></tr>
-<tr><td><b>Type</b></td><td>Service</td></tr>
-<tr><td><b>Title</b></td><td>Kubernetes - apiextensions</td></tr>
-<tr><td><b>Description</b></td><td>apiextensions</td></tr>
-<tr><td><b>Id</b></td><td><code>apiextensions:v23.03.00121</code></td></tr>
-</tbody></table>
 
 ## Resources
 <div class="row">
 <div class="providerDocColumn">
-<a href="/services/apiextensions/apiextensions/">apiextensions</a><br />
+<a href="/services/apiextensions/api_resources/">api_resources</a><br />
+<a href="/services/apiextensions/custom_resource_definitions/">custom_resource_definitions</a>
 </div>
 <div class="providerDocColumn">
+<a href="/services/apiextensions/custom_resource_definitions_status/">custom_resource_definitions_status</a>
 </div>
 </div>

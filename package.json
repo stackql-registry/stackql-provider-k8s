@@ -1,28 +1,31 @@
 {
-  "name": "stackql-provider-digitalocean",
+  "name": "stackql-provider-k8s",
   "version": "0.1.0",
-  "description": "StackQL Provider for Digital Ocean",
+  "description": "StackQL Provider for Kubernetes",
   "type": "module",
   "scripts": {
     "generate-docs": "./bin/generate-docs.sh",
-    "split": "./bin/split.sh",
+    "split": "node ./bin/split.mjs",
     "generate-mappings": "./bin/generate-mappings.sh",
+    "normalize": "node ./bin/normalize.mjs",
     "generate-provider": "./bin/generate-provider.sh",
     "start-server": "bash ./bin/start-server.sh",
     "stop-server": "bash ./bin/stop-server.sh",
     "server-status": "bash ./bin/server-status.sh",
-    "test-meta-routes": "node ./bin/test-meta-routes.cjs"
+    "test-meta-routes": "node ./bin/test-meta-routes.cjs",
+    "test-integration": "node ./tests/integration/run_integration_tests.mjs"
   },
   "dependencies": {
     "@stackql/pgwire-lite": "^1.0.1",
-    "@stackql/provider-utils": "^0.5.0"
+    "@stackql/provider-utils": "^0.7.6"
   },
   "keywords": [
     "stackql",
-    "digitalocean",
+    "kubernetes",
+    "k8s",
     "provider"
   ],
   "engines": {
-    "node": ">=14.16.0"
+    "node": ">=20.0.0"
   }
 }
