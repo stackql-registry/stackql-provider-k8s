@@ -59,11 +59,15 @@ deps: ## install node dependencies (latest @stackql/provider-utils + @stackql/pg
 
 download: ## download the per-group OpenAPI v3 specs from the pinned Kubernetes release branch
 	mkdir -p provider-dev/downloaded
-	@while read -r spec; do \
+	@while read -r spec || [ -n "$$spec" ]; do \
+	  [ -z "$$spec" ] && continue; \
 	  echo "  $(SPEC_BASE_URL)/$${spec}"; \
 	  curl -sfL "$(SPEC_BASE_URL)/$${spec}" -o "provider-dev/downloaded/$${spec}" || exit 1; \
 	done < provider-dev/config/spec_manifest.txt
-	@echo "downloaded $$(ls provider-dev/downloaded/*.json | wc -l) spec(s) for release-$(K8S_VERSION)"
+	@count=$$(ls provider-dev/downloaded/*.json | wc -l); \
+	expected=$$(grep -c . provider-dev/config/spec_manifest.txt); \
+	echo "downloaded $${count} spec(s) for release-$(K8S_VERSION)"; \
+	[ "$$count" -eq "$$expected" ] || { echo "expected $${expected} specs from the manifest"; exit 1; }
 
 split: ## split the downloaded specs into per-service StackQL service specs (provider-dev/source)
 	npm run split -- \
