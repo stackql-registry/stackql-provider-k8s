@@ -9,39 +9,31 @@ keywords:
   - infrastructure-as-code
   - configuration-as-data
   - cloud inventory
-description: Query, deploy and manage Kubernetes resources using SQL
+description: Query, deploy and manage k8s resources using SQL
 custom_edit_url: null
-image: /img/services/stackql-k8s-provider-featured-image.png
+image: /img/stackql-k8s-provider-featured-image.png
 ---
 
-admission registration api  
-    
-:::info Service Summary
+admissionregistration service documentation.
 
-<div class="row">
-<div class="providerDocColumn">
-<span>total resources:&nbsp;<b>1</b></span><br />
-<span>total selectable resources:&nbsp;<b>1</b></span><br />
-<span>total methods:&nbsp;<b>1</b></span><br />
-</div>
-</div>
+:::info[Service Summary]
+
+total resources: __8__  
 
 :::
-
-## Overview
-<table><tbody>
-<tr><td><b>Name</b></td><td><code>k8s.admissionregistration</code></td></tr>
-<tr><td><b>Type</b></td><td>Service</td></tr>
-<tr><td><b>Title</b></td><td>Kubernetes - admissionregistration</td></tr>
-<tr><td><b>Description</b></td><td>admission registration api</td></tr>
-<tr><td><b>Id</b></td><td><code>admissionregistration:v23.03.00121</code></td></tr>
-</tbody></table>
 
 ## Resources
 <div class="row">
 <div class="providerDocColumn">
-<a href="/services/admissionregistration/admissionregistration/">admissionregistration</a><br />
+<a href="/services/admissionregistration/api_resources/">api_resources</a><br />
+<a href="/services/admissionregistration/mutating_admission_policies/">mutating_admission_policies</a><br />
+<a href="/services/admissionregistration/mutating_admission_policy_bindings/">mutating_admission_policy_bindings</a><br />
+<a href="/services/admissionregistration/mutating_webhook_configurations/">mutating_webhook_configurations</a>
 </div>
 <div class="providerDocColumn">
+<a href="/services/admissionregistration/validating_admission_policies/">validating_admission_policies</a><br />
+<a href="/services/admissionregistration/validating_admission_policies_status/">validating_admission_policies_status</a><br />
+<a href="/services/admissionregistration/validating_admission_policy_bindings/">validating_admission_policy_bindings</a><br />
+<a href="/services/admissionregistration/validating_webhook_configurations/">validating_webhook_configurations</a>
 </div>
 </div>

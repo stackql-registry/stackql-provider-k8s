@@ -82,5 +82,7 @@ nohup.out
 # Ignore coverage and test output
 **/coverage/
 **/test-output/
-# Ignore everything in source directory except .gitkeep
-source/*
+# Ignore downloaded upstream specs (regenerable; split service specs in
+# provider-dev/source are committed as the pinned input for mapping)
+provider-dev/downloaded/*
+!provider-dev/downloaded/.gitkeep

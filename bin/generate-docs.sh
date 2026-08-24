@@ -26,6 +26,10 @@ while [[ $# -gt 0 ]]; do
       PROVIDER_DATA_DIR="$2"
       shift 2
       ;;
+    --snake-case-aliases)
+      SNAKE_CASE_ALIASES=true
+      shift
+      ;;
     --help)
       echo "Usage: generate-docs.sh [OPTIONS]"
       echo ""
@@ -52,7 +56,8 @@ node --experimental-modules "$SCRIPT_DIR/generate-docs.mjs" \
   --provider-name "$PROVIDER_NAME" \
   --provider-dir "$PROVIDER_DIR" \
   --output-dir "$OUTPUT_DIR" \
-  --provider-data-dir "$PROVIDER_DATA_DIR"
+  --provider-data-dir "$PROVIDER_DATA_DIR" \
+  ${SNAKE_CASE_ALIASES:+--snake-case-aliases}
 
 # Check if command succeeded
 if [ $? -ne 0 ]; then

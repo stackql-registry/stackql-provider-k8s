@@ -1,0 +1,93 @@
+# UAT fixtures for the k8s stackql provider - seeds a kind (or any) test
+# cluster with representative objects so the sample queries in the README
+# return rows. Apply with: kubectl apply -f tests/fixtures/seed.yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: stackql-uat
+  labels:
+    purpose: stackql-uat
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: uat-settings
+  namespace: stackql-uat
+data:
+  environment: test
+  log_level: debug
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: uat-credentials
+  namespace: stackql-uat
+type: Opaque
+stringData:
+  username: uat-user
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uat-web
+  namespace: stackql-uat
+  labels:
+    app: uat-web
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: uat-web
+  template:
+    metadata:
+      labels:
+        app: uat-web
+    spec:
+      containers:
+        - name: web
+          image: nginx:1.27-alpine
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              cpu: 10m
+              memory: 16Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: uat-web
+  namespace: stackql-uat
+spec:
+  selector:
+    app: uat-web
+  ports:
+    - port: 80
+      targetPort: 80
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: uat-tick
+  namespace: stackql-uat
+spec:
+  schedule: "*/15 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: tick
+              image: busybox:1.36
+              command: ["sh", "-c", "date"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: uat-reader
+  namespace: stackql-uat
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "configmaps"]
+    verbs: ["get", "list"]

@@ -45,6 +45,14 @@ while [[ $# -gt 0 ]]; do
       PROVIDER_CONFIG="$2"
       shift 2
       ;;
+    --service-config)
+      SERVICE_CONFIG="$2"
+      shift 2
+      ;;
+    --naive-req-body-translate)
+      NAIVE_REQ_BODY_TRANSLATE=true
+      shift
+      ;;
     --skip-files)
       SKIP_FILES="$2"
       shift 2
@@ -105,6 +113,16 @@ fi
 if [ -n "$PROVIDER_CONFIG" ]; then
   ARGS+=("--provider-config" "$PROVIDER_CONFIG")
   echo "Custom provider configuration provided"
+fi
+
+if [ -n "$SERVICE_CONFIG" ]; then
+  ARGS+=("--service-config" "$SERVICE_CONFIG")
+  echo "Custom service configuration provided"
+fi
+
+if [ "$NAIVE_REQ_BODY_TRANSLATE" = true ]; then
+  ARGS+=("--naive-req-body-translate")
+  echo "Naive request body translation: Yes"
 fi
 
 if [ -n "$SKIP_FILES" ]; then

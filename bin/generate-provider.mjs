@@ -16,9 +16,11 @@ async function generateProvider() {
   const configPath = getArg('--config-path');
   const servers = getArg('--servers');
   const providerConfig = getArg('--provider-config');
+  const serviceConfig = getArg('--service-config');
   const skipFiles = getArg('--skip-files')?.split(',') || [];
   const overwrite = args.includes('--overwrite');
   const verbose = args.includes('--verbose');
+  const naiveReqBodyTranslate = args.includes('--naive-req-body-translate');
 
   if (!providerName || !inputDir || !outputDir || !configPath) {
     console.error('Error: Missing required arguments');
@@ -51,7 +53,9 @@ async function generateProvider() {
       providerId: providerName,
       servers,
       providerConfig,
+      serviceConfig,
       skipFiles,
+      naiveReqBodyTranslate,
       overwrite,
       verbose
     });
