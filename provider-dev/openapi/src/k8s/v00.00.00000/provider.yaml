@@ -185,3 +185,4 @@ providerServices:
 config:
   auth:
     type: null_auth
+  snake_case_aliases: true

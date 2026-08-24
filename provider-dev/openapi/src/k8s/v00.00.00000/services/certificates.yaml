@@ -3147,6 +3147,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.resources
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/api_resources/methods/list'
@@ -3175,6 +3177,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -3202,6 +3206,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -3250,6 +3256,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -3294,6 +3302,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -3335,8 +3345,10 @@ servers:
         enum:
           - https
           - http
+        x-stackQL-envVar: KUBE_PROTOCOL
       cluster_addr:
         default: localhost
+        x-stackQL-envVar: KUBE_HOST
 x-stackQL-config:
   pagination:
     requestToken:

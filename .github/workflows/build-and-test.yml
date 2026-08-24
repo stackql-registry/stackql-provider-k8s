@@ -1,0 +1,109 @@
+name: build-and-test
+
+# Build the k8s provider from the pinned Kubernetes release specs and run
+# every cluster-free test layer on each push / PR, then run the live smoke
+# suite against a kind cluster matching the pinned minor release (free -
+# no cloud credentials involved). The specs are re-downloaded from the
+# pinned release branch on every build; if upstream moves the branch the
+# generation-drift gate fails and the diff must be reviewed and committed.
+
+on:
+  push:
+    branches: [main, 'feature/**']
+    paths-ignore: ['website/**']
+  pull_request:
+    branches: [main]
+    paths-ignore: ['website/**']
+  workflow_dispatch:
+
+env:
+  # keep in sync with K8S_VERSION in the Makefile (kind node image tag below too)
+  K8S_VERSION: '1.36'
+  KIND_NODE_IMAGE: kindest/node:v1.36.1
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # puts the latest stackql on PATH; bin/start-server.sh and the test
+      # runners resolve it from there (no wrapper - the real binary is needed)
+      - name: Install stackql
+        uses: stackql/setup-stackql@v2
+
+      - name: stackql version
+        run: stackql --version
+
+      - name: Build provider from the pinned release specs
+        run: make build
+
+      - name: Fail on uncommitted generation drift
+        run: |
+          git add -N .
+          if ! git diff --quiet -- provider-dev/openapi provider-dev/config provider-dev/source; then
+            echo "Generated output differs from the committed artifacts - run 'make build' and commit (or review upstream spec drift on the release-${K8S_VERSION} branch)."
+            git diff --stat -- provider-dev/openapi provider-dev/config provider-dev/source
+            exit 1
+          fi
+
+      - name: Offline validation
+        run: make test-offline
+
+      - name: Integration tests (mock kube-apiserver)
+        run: make test-integration
+
+      - name: Meta-route tests
+        run: make test-meta
+
+      - name: Generate docs (sanity - the site build runs on the web workflows)
+        run: make docs
+
+  smoke:
+    # live smoke suite against a real (kind) cluster matching the pinned
+    # minor release - read smokes plus the full write lifecycle, via the
+    # kubectl proxy null_auth vector. Entirely free: no cloud credentials.
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: npm
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create kind cluster (pinned minor release)
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: stackql-ci
+          node_image: ${{ env.KIND_NODE_IMAGE }}
+
+      - name: Seed UAT fixtures
+        run: |
+          kubectl apply -f tests/fixtures/seed.yaml
+          kubectl -n stackql-uat rollout status deployment --timeout=180s
+
+      - name: Start kubectl proxy
+        run: |
+          kubectl proxy --port=8001 &
+          timeout 30 bash -c 'until curl -sf http://localhost:8001/version > /dev/null; do sleep 1; done'
+
+      - name: Smoke suite (local provider)
+        run: make smoke

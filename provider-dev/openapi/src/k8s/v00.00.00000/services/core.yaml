@@ -107043,6 +107043,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.resources
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/api_resources/methods/list'
@@ -107062,12 +107064,16 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         get:
           operation:
             $ref: '#/paths/~1api~1v1~1componentstatuses~1{name}/get'
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/component_statuses/methods/get'
@@ -107088,6 +107094,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/config_maps_all_namespaces/methods/list'
@@ -107107,6 +107115,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/endpoints_all_namespaces/methods/list'
@@ -107126,6 +107136,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/events_all_namespaces/methods/list'
@@ -107145,6 +107157,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/limit_ranges_all_namespaces/methods/list'
@@ -107164,6 +107178,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -107191,6 +107207,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -107272,6 +107290,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -107299,6 +107319,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -107357,6 +107379,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -107384,6 +107408,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -107442,6 +107468,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -107469,6 +107497,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -107527,6 +107557,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -107554,6 +107586,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -107612,6 +107646,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -107639,6 +107675,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -107687,6 +107725,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -107741,6 +107781,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -107768,6 +107810,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -107840,6 +107884,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -107915,6 +107961,8 @@ components:
             transform:
               type: golang_template_text_v0.3.0
               body: '{"log_output": [{"log": {{ toJson . }}}]}'
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/pods_log/methods/get'
@@ -107933,60 +107981,80 @@ components:
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_get:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1pods~1{name}~1proxy/get'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_patch:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1pods~1{name}~1proxy/patch'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_post:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1pods~1{name}~1proxy/post'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_put:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1pods~1{name}~1proxy/put'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_delete_path:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1pods~1{name}~1proxy~1{path}/delete'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_get_path:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1pods~1{name}~1proxy~1{path}/get'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_patch_path:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1pods~1{name}~1proxy~1{path}/patch'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_post_path:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1pods~1{name}~1proxy~1{path}/post'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_put_path:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1pods~1{name}~1proxy~1{path}/put'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select: []
         insert: []
@@ -108004,6 +108072,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108048,6 +108118,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108102,6 +108174,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -108129,6 +108203,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108187,6 +108263,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -108214,6 +108292,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108262,6 +108342,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108306,6 +108388,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108360,6 +108444,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -108387,6 +108473,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108435,6 +108523,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108489,6 +108579,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -108516,6 +108608,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108574,6 +108668,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -108601,6 +108697,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108683,6 +108781,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -108710,6 +108810,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108758,60 +108860,80 @@ components:
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_get:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1services~1{name}~1proxy/get'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_patch:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1services~1{name}~1proxy/patch'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_post:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1services~1{name}~1proxy/post'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_put:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1services~1{name}~1proxy/put'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_delete_path:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1services~1{name}~1proxy~1{path}/delete'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_get_path:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1services~1{name}~1proxy~1{path}/get'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_patch_path:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1services~1{name}~1proxy~1{path}/patch'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_post_path:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1services~1{name}~1proxy~1{path}/post'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_put_path:
           operation:
             $ref: '#/paths/~1api~1v1~1namespaces~1{namespace}~1services~1{name}~1proxy~1{path}/put'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select: []
         insert: []
@@ -108829,6 +108951,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108897,6 +109021,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -108951,6 +109077,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -108978,6 +109106,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -109026,60 +109156,80 @@ components:
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_get:
           operation:
             $ref: '#/paths/~1api~1v1~1nodes~1{name}~1proxy/get'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_patch:
           operation:
             $ref: '#/paths/~1api~1v1~1nodes~1{name}~1proxy/patch'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_post:
           operation:
             $ref: '#/paths/~1api~1v1~1nodes~1{name}~1proxy/post'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_put:
           operation:
             $ref: '#/paths/~1api~1v1~1nodes~1{name}~1proxy/put'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_delete_path:
           operation:
             $ref: '#/paths/~1api~1v1~1nodes~1{name}~1proxy~1{path}/delete'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_get_path:
           operation:
             $ref: '#/paths/~1api~1v1~1nodes~1{name}~1proxy~1{path}/get'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_patch_path:
           operation:
             $ref: '#/paths/~1api~1v1~1nodes~1{name}~1proxy~1{path}/patch'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_post_path:
           operation:
             $ref: '#/paths/~1api~1v1~1nodes~1{name}~1proxy~1{path}/post'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         connect_put_path:
           operation:
             $ref: '#/paths/~1api~1v1~1nodes~1{name}~1proxy~1{path}/put'
           response:
             mediaType: '*/*'
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select: []
         insert: []
@@ -109097,6 +109247,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -109142,6 +109294,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/persistent_volume_claims_all_namespaces/methods/list'
@@ -109170,6 +109324,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
         create:
           config:
             requestBodyTranslate:
@@ -109197,6 +109353,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -109245,6 +109403,8 @@ components:
           response:
             mediaType: application/json
             openAPIDocKey: '200'
+          request:
+            nativeCasing: camel
         patch:
           config:
             requestBodyTranslate:
@@ -109290,6 +109450,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/pods_all_namespaces/methods/list'
@@ -109309,6 +109471,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/pod_templates_all_namespaces/methods/list'
@@ -109328,6 +109492,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/replication_controllers_all_namespaces/methods/list'
@@ -109347,6 +109513,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/resource_quotas_all_namespaces/methods/list'
@@ -109366,6 +109534,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/secrets_all_namespaces/methods/list'
@@ -109385,6 +109555,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/service_accounts_all_namespaces/methods/list'
@@ -109404,6 +109576,8 @@ components:
             mediaType: application/json
             openAPIDocKey: '200'
             objectKey: $.items
+          request:
+            nativeCasing: camel
       sqlVerbs:
         select:
           - $ref: '#/components/x-stackQL-resources/services_all_namespaces/methods/list'
@@ -109419,8 +109593,10 @@ servers:
         enum:
           - https
           - http
+        x-stackQL-envVar: KUBE_PROTOCOL
       cluster_addr:
         default: localhost
+        x-stackQL-envVar: KUBE_HOST
 x-stackQL-config:
   pagination:
     requestToken:

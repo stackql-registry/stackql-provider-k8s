@@ -32,8 +32,47 @@ Creates, updates, deletes, gets or lists a <code>self_subject_reviews</code> res
 
 The following fields are returned by `SELECT` queries:
 
-`SELECT` not supported for this resource, use `SHOW METHODS` to view available operations for the resource.
+<Tabs
+    defaultValue="create"
+    values={[
+        { label: 'create', value: 'create' }
+    ]}
+>
+<TabItem value="create">
 
+<table>
+<thead>
+    <tr>
+    <th>Name</th>
+    <th>Datatype</th>
+    <th>Description</th>
+    </tr>
+</thead>
+<tbody>
+<tr>
+    <td><CopyableCode code="api_version" /></td>
+    <td><code>string</code></td>
+    <td>APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https:​//git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources (wire: apiVersion)</td>
+</tr>
+<tr>
+    <td><CopyableCode code="kind" /></td>
+    <td><code>string</code></td>
+    <td>Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https:​//git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds</td>
+</tr>
+<tr>
+    <td><CopyableCode code="metadata" /></td>
+    <td><code>object</code></td>
+    <td>metadata is standard object's metadata. More info: https:​//git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata</td>
+</tr>
+<tr>
+    <td><CopyableCode code="status" /></td>
+    <td><code>object</code></td>
+    <td>status is filled in by the server with the user attributes.</td>
+</tr>
+</tbody>
+</table>
+</TabItem>
+</Tabs>
 
 ## Methods
 
@@ -52,9 +91,9 @@ The following methods are available for this resource:
 <tbody>
 <tr>
     <td><a href="#create"><CopyableCode code="create" /></a></td>
-    <td><CopyableCode code="insert" /></td>
+    <td><CopyableCode code="select" /></td>
     <td><a href="#parameter-protocol"><code>protocol</code></a>, <a href="#parameter-cluster_addr"><code>cluster_addr</code></a></td>
-    <td><a href="#parameter-dryRun"><code>dryRun</code></a>, <a href="#parameter-fieldManager"><code>fieldManager</code></a>, <a href="#parameter-fieldValidation"><code>fieldValidation</code></a>, <a href="#parameter-pretty"><code>pretty</code></a></td>
+    <td><a href="#parameter-dry_run"><code>dry_run</code></a>, <a href="#parameter-field_manager"><code>field_manager</code></a>, <a href="#parameter-field_validation"><code>field_validation</code></a>, <a href="#parameter-pretty"><code>pretty</code></a></td>
     <td>create a SelfSubjectReview</td>
 </tr>
 </tbody>
@@ -76,27 +115,27 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-cluster_addr">
     <td><CopyableCode code="cluster_addr" /></td>
     <td><code>string</code></td>
-    <td>(default: localhost)</td>
+    <td>(default: localhost, x-stackQL-envVar: KUBE_HOST)</td>
 </tr>
 <tr id="parameter-protocol">
     <td><CopyableCode code="protocol" /></td>
     <td><code>string</code></td>
-    <td>(default: https, enum: &#91;https, http&#93;)</td>
+    <td>(default: https, enum: &#91;https, http&#93;, x-stackQL-envVar: KUBE_PROTOCOL)</td>
 </tr>
-<tr id="parameter-dryRun">
-    <td><CopyableCode code="dryRun" /></td>
+<tr id="parameter-dry_run">
+    <td><CopyableCode code="dry_run" /></td>
     <td><code>string</code></td>
-    <td>When present, indicates that modifications should not be persisted. An invalid or unrecognized dryRun directive will result in an error response and no further processing of the request. Valid values are: - All: all dry run stages will be processed</td>
+    <td>When present, indicates that modifications should not be persisted. An invalid or unrecognized dryRun directive will result in an error response and no further processing of the request. Valid values are: - All: all dry run stages will be processed (wire: dryRun)</td>
 </tr>
-<tr id="parameter-fieldManager">
-    <td><CopyableCode code="fieldManager" /></td>
+<tr id="parameter-field_manager">
+    <td><CopyableCode code="field_manager" /></td>
     <td><code>string</code></td>
-    <td>fieldManager is a name associated with the actor or entity that is making these changes. The value must be less than or 128 characters long, and only contain printable characters, as defined by https:​//golang.org/pkg/unicode/#IsPrint.</td>
+    <td>fieldManager is a name associated with the actor or entity that is making these changes. The value must be less than or 128 characters long, and only contain printable characters, as defined by https:​//golang.org/pkg/unicode/#IsPrint. (wire: fieldManager)</td>
 </tr>
-<tr id="parameter-fieldValidation">
-    <td><CopyableCode code="fieldValidation" /></td>
+<tr id="parameter-field_validation">
+    <td><CopyableCode code="field_validation" /></td>
     <td><code>string</code></td>
-    <td>fieldValidation instructs the server on how to handle objects in the request (POST/PUT/PATCH) containing unknown or duplicate fields. Valid values are: - Ignore: This will ignore any unknown fields that are silently dropped from the object, and will ignore all but the last duplicate field that the decoder encounters. This is the default behavior prior to v1.23. - Warn: This will send a warning via the standard warning response header for each unknown field that is dropped from the object, and for each duplicate field that is encountered. The request will still succeed if there are no other errors, and will only persist the last of any duplicate fields. This is the default in v1.23+ - Strict: This will fail the request with a BadRequest error if any unknown fields would be dropped from the object, or if any duplicate fields are present. The error returned from the server will contain all unknown and duplicate fields encountered.</td>
+    <td>fieldValidation instructs the server on how to handle objects in the request (POST/PUT/PATCH) containing unknown or duplicate fields. Valid values are: - Ignore: This will ignore any unknown fields that are silently dropped from the object, and will ignore all but the last duplicate field that the decoder encounters. This is the default behavior prior to v1.23. - Warn: This will send a warning via the standard warning response header for each unknown field that is dropped from the object, and for each duplicate field that is encountered. The request will still succeed if there are no other errors, and will only persist the last of any duplicate fields. This is the default in v1.23+ - Strict: This will fail the request with a BadRequest error if any unknown fields would be dropped from the object, or if any duplicate fields are present. The error returned from the server will contain all unknown and duplicate fields encountered. (wire: fieldValidation)</td>
 </tr>
 <tr id="parameter-pretty">
     <td><CopyableCode code="pretty" /></td>
@@ -106,13 +145,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 </tbody>
 </table>
 
-## `INSERT` examples
+## `SELECT` examples
 
 <Tabs
     defaultValue="create"
     values={[
-        { label: 'create', value: 'create' },
-        { label: 'Manifest', value: 'manifest' }
+        { label: 'create', value: 'create' }
     ]}
 >
 <TabItem value="create">
@@ -120,118 +158,19 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 create a SelfSubjectReview
 
 ```sql
-INSERT INTO k8s.authentication.self_subject_reviews (
-apiVersion,
-kind,
-metadata,
-status,
-protocol,
-cluster_addr,
-dryRun,
-fieldManager,
-fieldValidation,
-pretty
-)
-SELECT 
-'{{ apiVersion }}',
-'{{ kind }}',
-'{{ metadata }}',
-'{{ status }}',
-'{{ protocol }}',
-'{{ cluster_addr }}',
-'{{ dryRun }}',
-'{{ fieldManager }}',
-'{{ fieldValidation }}',
-'{{ pretty }}'
-RETURNING
-apiVersion,
+SELECT
+api_version,
 kind,
 metadata,
 status
+FROM k8s.authentication.self_subject_reviews
+WHERE protocol = '{{ protocol }}' -- required
+AND cluster_addr = '{{ cluster_addr }}' -- required
+AND dry_run = '{{ dry_run }}'
+AND field_manager = '{{ field_manager }}'
+AND field_validation = '{{ field_validation }}'
+AND pretty = '{{ pretty }}'
 ;
 ```
-</TabItem>
-<TabItem value="manifest">
-
-<CodeBlock language="yaml">{`# Description fields are for documentation purposes
-- name: self_subject_reviews
-  props:
-    - name: protocol
-      value: "{{ protocol }}"
-      description: Required parameter for the self_subject_reviews resource.
-    - name: cluster_addr
-      value: "{{ cluster_addr }}"
-      description: Required parameter for the self_subject_reviews resource.
-    - name: apiVersion
-      value: "{{ apiVersion }}"
-      description: |
-        APIVersion defines the versioned schema of this representation of an object. Servers should convert recognized schemas to the latest internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
-    - name: kind
-      value: "{{ kind }}"
-      description: |
-        Kind is a string value representing the REST resource this object represents. Servers may infer this from the endpoint the client submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
-    - name: metadata
-      description: |
-        metadata is standard object's metadata. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#metadata
-      value:
-        annotations: "{{ annotations }}"
-        creationTimestamp: "{{ creationTimestamp }}"
-        deletionGracePeriodSeconds: {{ deletionGracePeriodSeconds }}
-        deletionTimestamp: "{{ deletionTimestamp }}"
-        finalizers:
-          - "{{ finalizers }}"
-        generateName: "{{ generateName }}"
-        generation: {{ generation }}
-        labels: "{{ labels }}"
-        managedFields:
-          - apiVersion: "{{ apiVersion }}"
-            fieldsType: "{{ fieldsType }}"
-            fieldsV1: "{{ fieldsV1 }}"
-            manager: "{{ manager }}"
-            operation: "{{ operation }}"
-            subresource: "{{ subresource }}"
-            time: "{{ time }}"
-        name: "{{ name }}"
-        namespace: "{{ namespace }}"
-        ownerReferences:
-          - apiVersion: "{{ apiVersion }}"
-            blockOwnerDeletion: {{ blockOwnerDeletion }}
-            controller: {{ controller }}
-            kind: "{{ kind }}"
-            name: "{{ name }}"
-            uid: "{{ uid }}"
-        resourceVersion: "{{ resourceVersion }}"
-        selfLink: "{{ selfLink }}"
-        uid: "{{ uid }}"
-      default: [object Object]
-    - name: status
-      description: |
-        status is filled in by the server with the user attributes.
-      value:
-        userInfo:
-          extra: "{{ extra }}"
-          groups:
-            - "{{ groups }}"
-          uid: "{{ uid }}"
-          username: "{{ username }}"
-      default: [object Object]
-    - name: dryRun
-      value: "{{ dryRun }}"
-      description: When present, indicates that modifications should not be persisted. An invalid or unrecognized dryRun directive will result in an error response and no further processing of the request. Valid values are: - All: all dry run stages will be processed
-      description: When present, indicates that modifications should not be persisted. An invalid or unrecognized dryRun directive will result in an error response and no further processing of the request. Valid values are: - All: all dry run stages will be processed
-    - name: fieldManager
-      value: "{{ fieldManager }}"
-      description: fieldManager is a name associated with the actor or entity that is making these changes. The value must be less than or 128 characters long, and only contain printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
-      description: fieldManager is a name associated with the actor or entity that is making these changes. The value must be less than or 128 characters long, and only contain printable characters, as defined by https://golang.org/pkg/unicode/#IsPrint.
-    - name: fieldValidation
-      value: "{{ fieldValidation }}"
-      description: fieldValidation instructs the server on how to handle objects in the request (POST/PUT/PATCH) containing unknown or duplicate fields. Valid values are: - Ignore: This will ignore any unknown fields that are silently dropped from the object, and will ignore all but the last duplicate field that the decoder encounters. This is the default behavior prior to v1.23. - Warn: This will send a warning via the standard warning response header for each unknown field that is dropped from the object, and for each duplicate field that is encountered. The request will still succeed if there are no other errors, and will only persist the last of any duplicate fields. This is the default in v1.23+ - Strict: This will fail the request with a BadRequest error if any unknown fields would be dropped from the object, or if any duplicate fields are present. The error returned from the server will contain all unknown and duplicate fields encountered.
-      description: fieldValidation instructs the server on how to handle objects in the request (POST/PUT/PATCH) containing unknown or duplicate fields. Valid values are: - Ignore: This will ignore any unknown fields that are silently dropped from the object, and will ignore all but the last duplicate field that the decoder encounters. This is the default behavior prior to v1.23. - Warn: This will send a warning via the standard warning response header for each unknown field that is dropped from the object, and for each duplicate field that is encountered. The request will still succeed if there are no other errors, and will only persist the last of any duplicate fields. This is the default in v1.23+ - Strict: This will fail the request with a BadRequest error if any unknown fields would be dropped from the object, or if any duplicate fields are present. The error returned from the server will contain all unknown and duplicate fields encountered.
-    - name: pretty
-      value: "{{ pretty }}"
-      description: If 'true', then the output is pretty printed. Defaults to 'false' unless the user-agent indicates a browser or command-line HTTP tool (curl and wget).
-      description: If 'true', then the output is pretty printed. Defaults to 'false' unless the user-agent indicates a browser or command-line HTTP tool (curl and wget).
-`}</CodeBlock>
-
 </TabItem>
 </Tabs>

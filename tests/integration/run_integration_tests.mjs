@@ -39,10 +39,11 @@ const registry = JSON.stringify({
 // IMPORTANT: must be async (spawn, not spawnSync) - the mock kube-apiserver
 // runs on this process's event loop, so a synchronous wait for stackql
 // deadlocks: stackql blocks on an HTTP response the mock can never serve.
-function runSql(sql) {
+function runSql(sql, extraEnv = null) {
   return new Promise((resolve) => {
     const child = spawn(stackqlBin, [`--registry=${registry}`, 'exec', sql, '--output', 'json'], {
-      cwd: repoRoot
+      cwd: repoRoot,
+      env: extraEnv ? { ...process.env, ...extraEnv } : process.env
     });
     let stdout = '', stderr = '';
     child.stdout.on('data', (d) => { stdout += d; });
@@ -107,6 +108,17 @@ try {
     nsCalls.length > 0 && nsCalls[0].query.limit === '1',
     `calls: ${JSON.stringify(nsCalls.map((c) => c.query))}`);
 
+  // --- server variables defaulted from env vars (x-stackQL-envVar):
+  // no protocol/cluster_addr in the WHERE clause at all
+  r = await runSql(`SELECT json_extract(metadata, '$.name') AS name FROM k8s.core.namespaces`,
+    { KUBE_HOST: `localhost:${port}`, KUBE_PROTOCOL: 'http' });
+  check('KUBE_HOST/KUBE_PROTOCOL env defaults (no server params in WHERE)', r.rows && r.rows.length === 5, r.err || `got ${r.rows?.length}`);
+
+  // --- snake_case_aliases: DESCRIBE presents snake aliases of camelCase wire names
+  r = await runSql(`DESCRIBE k8s.core.secrets`);
+  check('snake_case column surface (string_data in DESCRIBE)',
+    r.rows && JSON.stringify(r.rows).includes('string_data'), r.err || JSON.stringify(r.rows).slice(0, 160));
+
   // --- cluster-scoped get (name routing)
   r = await runSql(`SELECT kind, json_extract(metadata, '$.name') AS name FROM k8s.core.namespaces WHERE name = 'default' AND ${where}`);
   check('namespace get', r.rows && r.rows.length === 1 && JSON.stringify(r.rows[0]).includes('default'), r.err || JSON.stringify(r.rows));
@@ -116,6 +128,17 @@ try {
   check('pods namespaced list (3)', r.rows && r.rows.length === 3, r.err || `got ${r.rows?.length}`);
   r = await runSql(`SELECT json_extract(metadata, '$.name') AS name, json_extract(metadata, '$.namespace') AS namespace FROM k8s.core.pods_all_namespaces WHERE ${where}`);
   check('pods_all_namespaces list (4)', r.rows && r.rows.length === 4, r.err || `got ${r.rows?.length}`);
+
+  // --- snake_case WHERE param aliasing on SELECT methods (request.nativeCasing
+  // stamped on every method): label_selector resolves to the labelSelector wire
+  // param and is serialized under the wire name (the mock does not filter -
+  // assert the wire call, not the row count)
+  mark = log.length;
+  r = await runSql(`SELECT json_extract(metadata, '$.name') AS name FROM k8s.core.pods WHERE namespace = 'default' AND label_selector = 'app=web' AND ${where}`);
+  const lsCalls = log.slice(mark).filter((e) => e.path === '/api/v1/namespaces/default/pods');
+  check('snake WHERE param on SELECT (label_selector -> labelSelector on the wire)',
+    r.rows && r.rows.length === 3 && lsCalls.length > 0 && lsCalls[0].query.labelSelector === 'app=web',
+    r.err || `rows ${r.rows?.length}, calls ${JSON.stringify(lsCalls.map((c) => c.query))}`);
 
   // --- namespaced get with two path params
   r = await runSql(`SELECT json_extract(status, '$.phase') AS phase FROM k8s.core.pods WHERE namespace = 'default' AND name = 'web-1' AND ${where}`);

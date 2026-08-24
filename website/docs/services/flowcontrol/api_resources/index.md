@@ -55,6 +55,11 @@ The following fields are returned by `SELECT` queries:
     <td>name is the plural name of the resource. (default: )</td>
 </tr>
 <tr>
+    <td><CopyableCode code="singular_name" /></td>
+    <td><code>string</code></td>
+    <td>singularName is the singular name of the resource.  This allows clients to handle plural and singular opaquely. The singularName is more correct for reporting status on a single item and both singular and plural are allowed from the kubectl CLI interface. (default: ) (wire: singularName)</td>
+</tr>
+<tr>
     <td><CopyableCode code="categories" /></td>
     <td><code>array</code></td>
     <td>categories is a list of the grouped resources this resource belongs to (e.g. 'all') (x-kubernetes-list-type: atomic)</td>
@@ -75,19 +80,14 @@ The following fields are returned by `SELECT` queries:
     <td>namespaced indicates if a resource is namespaced or not.</td>
 </tr>
 <tr>
-    <td><CopyableCode code="shortNames" /></td>
+    <td><CopyableCode code="short_names" /></td>
     <td><code>array</code></td>
-    <td>shortNames is a list of suggested short names of the resource. (x-kubernetes-list-type: atomic)</td>
+    <td>shortNames is a list of suggested short names of the resource. (x-kubernetes-list-type: atomic) (wire: shortNames)</td>
 </tr>
 <tr>
-    <td><CopyableCode code="singularName" /></td>
+    <td><CopyableCode code="storage_version_hash" /></td>
     <td><code>string</code></td>
-    <td>singularName is the singular name of the resource.  This allows clients to handle plural and singular opaquely. The singularName is more correct for reporting status on a single item and both singular and plural are allowed from the kubectl CLI interface. (default: )</td>
-</tr>
-<tr>
-    <td><CopyableCode code="storageVersionHash" /></td>
-    <td><code>string</code></td>
-    <td>The hash value of the storage version, the version this resource is converted to when written to the data store. Value must be treated as opaque by clients. Only equality comparison on the value is valid. This is an alpha feature and may change or be removed in the future. The field is populated by the apiserver only if the StorageVersionHash feature gate is enabled. This field will remain optional even if it graduates.</td>
+    <td>The hash value of the storage version, the version this resource is converted to when written to the data store. Value must be treated as opaque by clients. Only equality comparison on the value is valid. This is an alpha feature and may change or be removed in the future. The field is populated by the apiserver only if the StorageVersionHash feature gate is enabled. This field will remain optional even if it graduates. (wire: storageVersionHash)</td>
 </tr>
 <tr>
     <td><CopyableCode code="verbs" /></td>
@@ -145,12 +145,12 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-cluster_addr">
     <td><CopyableCode code="cluster_addr" /></td>
     <td><code>string</code></td>
-    <td>(default: localhost)</td>
+    <td>(default: localhost, x-stackQL-envVar: KUBE_HOST)</td>
 </tr>
 <tr id="parameter-protocol">
     <td><CopyableCode code="protocol" /></td>
     <td><code>string</code></td>
-    <td>(default: https, enum: &#91;https, http&#93;)</td>
+    <td>(default: https, enum: &#91;https, http&#93;, x-stackQL-envVar: KUBE_PROTOCOL)</td>
 </tr>
 </tbody>
 </table>
@@ -170,13 +170,13 @@ get available resources
 ```sql
 SELECT
 name,
+singular_name,
 categories,
 group,
 kind,
 namespaced,
-shortNames,
-singularName,
-storageVersionHash,
+short_names,
+storage_version_hash,
 verbs,
 version
 FROM k8s.flowcontrol.api_resources

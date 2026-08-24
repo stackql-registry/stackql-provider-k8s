@@ -21,7 +21,8 @@ This rebuild is a breaking change relative to the published `k8s` provider (`v23
 - Service coverage expands from 5 services (`core`, `core_v1`, `admissionregistration`, `admissionregistration_v1`, `apiextensions`) to all built-in API groups, and the duplicated `<service>`/`<service>_v1` naming is collapsed to a single flat service name per group.
 - Resource names move from singular (`k8s.core_v1.pod`) to plural (`k8s.core.pods`), consistent with the `aws`, `google`, and `databricks` providers.
 - Request body columns move from `data__` prefixed (`data__metadata`) to native wire property names (`metadata`, `spec`, `data`) via the naive request body translator, consistent with the `aws` and `azure` providers; snake_case aliases of camelCase wire names are also accepted.
-- The `cluster_addr` and `protocol` server parameters are retained and behave as before.
+- `SELECT` / `DESCRIBE` columns present as snake_case aliases of camelCase wire properties (`roleRef` -> `role_ref`, `stringData` -> `string_data`) via `snake_case_aliases: true`, consistent with the `aws` and `azure` providers. Most top-level k8s columns (`metadata`, `spec`, `status`) are unaffected; nested `json_extract` paths remain wire-format camelCase.
+- The `cluster_addr` and `protocol` server parameters are retained and behave as before, and can now be defaulted from the `KUBE_HOST` and `KUBE_PROTOCOL` environment variables.
 
 Existing queries against the old provider will require updating. The old provider version remains available in the registry for pinning.
 
@@ -29,11 +30,39 @@ Existing queries against the old provider will require updating. The old provide
 
 To build or test the Kubernetes provider you will need:
 
-1. Node.js 20+ (for the build pipeline)
-2. StackQL CLI installed (see [StackQL](https://github.com/stackql/stackql))
-3. A Kubernetes cluster for testing (a local [kind](https://kind.sigs.k8s.io/) cluster is sufficient), with `kubectl` configured
+1. Node.js 20+ and GNU make (for the build pipeline)
+2. StackQL CLI installed (see [StackQL](https://github.com/stackql/stackql)) - `$STACKQL`, `./stackql`, or on `PATH`
+3. Python 3 (a venv with `pystackql` is created on demand for the smoke suite)
+4. yarn (for the docs microsite)
+5. A Kubernetes cluster for testing (a local [kind](https://kind.sigs.k8s.io/) cluster is sufficient), with `kubectl` configured
 
-## 1. Download the OpenAPI Specs
+## Build with make
+
+Every pipeline stage below is wrapped as a `make` target ([Makefile](Makefile)); `make all` runs the full chain - download pinned specs, split, map, normalize, generate, post-process, all non-cluster tests, docs, and the website build - and can be used at any stage to produce and test a new provider and docs from upstream changes:
+
+```bash
+make all              # deps -> build -> test -> docs -> website
+make help             # list all targets
+```
+
+Individual stages (each corresponds to a numbered section below):
+
+| Target | Purpose |
+|---|---|
+| `make deps` | install node dependencies |
+| `make download` | download the per-group OpenAPI v3 specs for the pinned release (`K8S_VERSION` in the Makefile) |
+| `make split` | split into per-service StackQL service specs |
+| `make mappings` | regenerate and validate `all_services.csv` from the mapping rules |
+| `make pre-normalize normalize` | lower polymorphism in the service specs |
+| `make generate` | generate the provider (runs `post-process` automatically) |
+| `make test` | offline + integration + meta-route test layers (no cluster required) |
+| `make smoke` | live smoke suite against the locally generated provider (needs a cluster + `kubectl proxy`) |
+| `make smoke-live` | live smoke suite against the published provider in the public registry |
+| `make docs website` | generate the doc pages and build the microsite |
+
+`make smoke` and `make smoke-live` source a gitignored `.env` file if present (`KUBE_HOST`, `KUBE_PROTOCOL`, `KUBE_TOKEN`). The smoke suite runs entirely against a cluster you point it at - with a local kind cluster the total cost is $0.
+
+## 1. Download the OpenAPI Specs (`make download`)
 
 Download the per-group OpenAPI v3 specs from the pinned Kubernetes release branch. Spec files follow the naming convention `api__v1_openapi.json` (core group) and `apis__<group>__<version>_openapi.json` (named groups):
 
@@ -74,7 +103,7 @@ apis__storage.k8s.io__v1_openapi.json
 
 Beta and alpha group versions (e.g. `resource.k8s.io` DRA APIs) can be added to the manifest as they reach GA.
 
-## 2. Split into Service Specs
+## 2. Split into Service Specs (`make split`)
 
 Process the per-group specs into StackQL service specs. Each downloaded spec file maps to exactly one service; the `group` discriminator derives the API group from the spec file name (`api__v1_openapi.json` -> `core`, `apis__<group>__<version>_openapi.json` -> `<group>`) and group names are mapped to service names using the overrides below (suffixes like `.k8s.io` and `.authorization.k8s.io` are stripped for readability):
 
@@ -117,7 +146,7 @@ npm run split -- \
 }
 ```
 
-## 3. Generate Mappings
+## 3. Generate Mappings (`make mappings`)
 
 Generate the mapping configuration connecting OpenAPI operations to StackQL resources, methods, and SQL verbs:
 
@@ -172,7 +201,7 @@ RETURNING status;
 
 The script validates the result - every generator-relevant operation is mapped, method names are unique per resource, and overloaded SQL verbs have unique path-parameter signatures - and fails without writing on any violation. It is deterministic and re-runnable on version bumps; review the CSV diff after re-running. Manual mapping decisions (if any) should be applied as rules in the script, not hand-edits to the CSV.
 
-## 4. Normalize the Service Specs
+## 4. Normalize the Service Specs (`make pre-normalize normalize`)
 
 StackQL models providers as relational data sources, and relational databases have no native concept of polymorphism - `oneOf`, `anyOf`, and `allOf` composition in the specs must be lowered to concrete schemas before provider generation. This is done in place on `provider-dev/source`:
 
@@ -192,9 +221,9 @@ npm run normalize -- --api-dir provider-dev/source
 
 The `allOf`/`oneOf`/`anyOf` keys remaining in `apiextensions.yaml` afterwards are `JSONSchemaProps` property definitions (the CRD meta-schema has fields literally named `allOf`/`oneOf`/`anyOf`) - data, not composition. Re-running the mapping script against the normalized specs produces an identical CSV; normalization changes schemas only, never paths, verbs, or operations.
 
-## 5. Generate Provider
+## 5. Generate Provider (`make generate`)
 
-Transform the service specs into a functional StackQL provider using the mappings:
+Transform the service specs into a functional StackQL provider using the mappings (`make generate` - the servers, provider config, and service config JSON below are maintained in the [Makefile](Makefile)):
 
 ```bash
 rm -rf provider-dev/openapi/*
@@ -203,14 +232,18 @@ npm run generate-provider -- \
   --input-dir provider-dev/source \
   --output-dir provider-dev/openapi/src/k8s \
   --config-path provider-dev/config/all_services.csv \
-  --servers '[{"url": "{protocol}://{cluster_addr}", "variables": {"protocol": {"default": "https", "enum": ["https", "http"]}, "cluster_addr": {"default": "localhost"}}}]' \
-  --provider-config '{"auth": {"type": "null_auth"}}' \
+  --servers '[{"url": "{protocol}://{cluster_addr}", "variables": {"protocol": {"default": "https", "enum": ["https", "http"], "x-stackQL-envVar": "KUBE_PROTOCOL"}, "cluster_addr": {"default": "localhost", "x-stackQL-envVar": "KUBE_HOST"}}}]' \
+  --provider-config '{"auth": {"type": "null_auth"}, "snake_case_aliases": true}' \
   --service-config '{"pagination": {"requestToken": {"key": "continue", "location": "query"}, "responseToken": {"key": "$.metadata.continue", "location": "body"}}, "queryParamPushdown": {"top": {"paramName": "limit"}}}' \
   --naive-req-body-translate \
   --overwrite
 ```
 
 The `enum` on `protocol` is required - the any-sdk query router builds route matchers from the server variable's default plus enum values, so without it every `protocol = 'http'` query fails route resolution.
+
+`x-stackQL-envVar` lets the server variables default from the environment (`KUBE_HOST`, `KUBE_PROTOCOL`), removing them from the `WHERE` clause entirely; an explicit `WHERE` value always wins. See [Server Parameters](#server-parameters).
+
+`snake_case_aliases` presents `SELECT` / `DESCRIBE` columns as snake_case aliases of the camelCase wire properties (`roleRef` -> `role_ref`, `stringData` -> `string_data`) - the same pattern the production `aws` and `azure` providers ship. Most k8s top-level columns (`metadata`, `spec`, `status`, `data`) are unaffected; nested JSON paths inside `json_extract` remain wire-format camelCase.
 
 `--service-config` injects an `x-stackQL-config` block into every service spec, enabling two runtime behaviours uniform across all Kubernetes list APIs:
 
@@ -225,10 +258,13 @@ Then post-process the generated provider:
 node provider-dev/scripts/post_process.mjs
 ```
 
-This applies two fixes the generator cannot make on its own:
+This applies fixes the generator cannot make on its own:
 
 - **Response media type**: the upstream specs list response content types alphabetically, so `application/cbor` sorts first and gets stamped as every method's `response.mediaType`. StackQL can only project rows from JSON (or XML) response schemas - with cbor every resource is unselectable. The script rewrites `response.mediaType` to `application/json` on all 543 mapped methods.
-- **Patch request binding**: k8s patch operations accept only patch-specific content types with an opaque `Patch` request schema, and any-sdk's default request resolution matches `application/json` only - `UPDATE` would find no request body. The script pins `request.mediaType` to `application/merge-patch+json` (partial-update semantics match the `UPDATE` verb) and overrides the request schema with the operation's response kind schema so `data__*` columns map to real fields.
+- **Patch request binding**: k8s patch operations accept only patch-specific content types with an opaque `Patch` request schema, and any-sdk's default request resolution matches `application/json` only - `UPDATE` would find no request body. The script pins `request.mediaType` to `application/merge-patch+json` (partial-update semantics match the `UPDATE` verb) and overrides the request schema with the operation's response kind schema so body columns map to real fields.
+- **JSON request bindings**: the specs declare create/replace/delete request bodies as `*/*`, which any-sdk never matches - the script rewrites them to `application/json` and binds them on each method.
+- **`nativeCasing: camel` on every method**: paired with `snake_case_aliases` on the provider config, snake_case `WHERE` parameters (`label_selector`, `field_selector`) resolve against the camelCase wire parameters on every method, including `SELECT` - not just methods with request bodies. The camelCase spellings keep working.
+- **Review body bindings and the `pods_log` text transform** (see steps 3 and the mapping notes above).
 
 ### Server Parameters
 
@@ -236,6 +272,21 @@ This applies two fixes the generator cannot make on its own:
 
 - `protocol` - `https` or `http` (default: `https`)
 - `cluster_addr` - the hostname of the Kubernetes API server (default: `localhost`)
+
+Both can be defaulted from environment variables via `x-stackQL-envVar`, removing them from the `WHERE` clause entirely (an explicit `WHERE` value always wins):
+
+```bash
+export KUBE_HOST='localhost:8001'    # cluster_addr default - host:port, no scheme
+export KUBE_PROTOCOL='http'          # protocol default
+```
+
+```sql
+SELECT json_extract(metadata, '$.name') AS name
+FROM k8s.core.pods
+WHERE namespace = 'default';
+```
+
+`KUBE_HOST` matches the Terraform `kubernetes` provider variable by name, but takes the hostname and port only (no scheme) - the scheme lives in `KUBE_PROTOCOL`.
 
 `cluster_addr` must currently be a dot-free hostname (`localhost`, or an `/etc/hosts` alias for a remote endpoint) - the any-sdk query router matches the request host against the `{cluster_addr}` server template with gorilla/mux, whose host variables do not span dots, so bare IPs and FQDNs fail route resolution. Core fix pending; the `kubectl proxy` vector below is unaffected.
 
@@ -261,8 +312,8 @@ Columns are the top-level fields of each object (`metadata`, `spec`, `status`, .
 For direct cluster access, supply a bearer token via runtime auth config, along with the cluster CA bundle:
 
 ```bash
-export K8S_TOKEN='eyJhbGciOiJ...'
-AUTH='{ "k8s": { "type": "bearer", "credentialsenvvar": "K8S_TOKEN" } }'
+export KUBE_TOKEN='eyJhbGciOiJ...'
+AUTH='{ "k8s": { "type": "bearer", "credentialsenvvar": "KUBE_TOKEN" } }'
 stackql shell --auth="${AUTH}" --tls.CABundle k8s_cert_bundle.pem
 ```
 
@@ -272,11 +323,11 @@ Extract the CA bundle from the cluster:
 kubectl get secret -o jsonpath="{.items[?(@.type==\"kubernetes.io/service-account-token\")].data['ca\.crt']}" | base64 -d > k8s_cert_bundle.pem
 ```
 
-Alternatively add `--tls.allowInsecure=true` (not recommended). For managed clusters (EKS, GKE, AKS), obtain a token from the platform credential helper (`aws eks get-token`, `gke-gcloud-auth-plugin`, `kubelogin`) and pass it via `K8S_TOKEN`. Native kubeconfig context resolution is a candidate runtime enhancement, not a provider build concern.
+Alternatively add `--tls.allowInsecure=true` (not recommended). For managed clusters (EKS, GKE, AKS), obtain a token from the platform credential helper (`aws eks get-token`, `gke-gcloud-auth-plugin`, `kubelogin`) and pass it via `KUBE_TOKEN`. Native kubeconfig context resolution is a candidate runtime enhancement, not a provider build concern.
 
-## 6. Test Provider
+## 6. Test Provider (`make test`)
 
-### Validate offline
+### Validate offline (`make test-offline`)
 
 Sanity-check the provider resolves without any cluster:
 
@@ -290,7 +341,7 @@ stackql --registry="$REG" exec "SHOW METHODS IN k8s.core.pods"
 stackql --registry="$REG" exec "DESCRIBE EXTENDED k8s.apps.deployments"
 ```
 
-### Meta-route test suite
+### Meta-route test suite (`make test-meta`)
 
 Starts a StackQL wire server against the local registry and walks every service, resource, and method, asserting that every resource has methods, no two methods on the same SQL verb share a required-params signature, and every selectable resource yields non-empty `DESCRIBE EXTENDED`:
 
@@ -301,7 +352,7 @@ npm run test-meta-routes -- k8s --verbose
 npm run stop-server
 ```
 
-### Integration tests (mock API server - no cluster required)
+### Integration tests (`make test-integration` - mock API server, no cluster required)
 
 Runs the provider against an in-process mock kube-apiserver ([tests/integration/mock_k8s_server.mjs](tests/integration/mock_k8s_server.mjs)) that serves real k8s wire shapes, and asserts row-level results for each operation archetype: list unwrapping via `$.items`, namespaced and cluster-scoped routing, `_all_namespaces` resources, subresources, group discovery via `$.resources`, and the full configmap `INSERT` / `UPDATE` / `REPLACE` / `DELETE` lifecycle:
 
@@ -386,16 +437,23 @@ WHERE namespace = 'stackql-uat' AND name = 'uat-cm';
 [tests/smoke_test.py](tests/smoke_test.py) (pystackql) runs read smokes plus a full write lifecycle - namespace and configmap `INSERT` / `UPDATE` / `REPLACE` / `DELETE`, a deployment scaled through the `deployments_scale` subresource - in a disposable `stackql-smoke-<stamp>` namespace, sweeping any breadcrumbs from prior runs first:
 
 ```bash
-pip install pystackql
-kubectl proxy --port=8001                        # default access vector
+kubectl proxy --port=8001                        # default access vector, leave running
 
+make smoke                                       # local registry (creates a pystackql venv on demand)
+make smoke-live                                  # --live: published provider in the stackql registry
+make smoke-cleanup                               # just sweep breadcrumbs
+```
+
+Or invoke the script directly (`pip install pystackql`):
+
+```bash
 python tests/smoke_test.py                       # local registry (default)
-python tests/smoke_test.py --registry public     # published provider in the stackql registry
+python tests/smoke_test.py --live                # published provider (alias for --registry public)
 python tests/smoke_test.py --cleanup-only        # just sweep breadcrumbs
 python tests/smoke_test.py --skip-deployment     # configmap lifecycle only
 ```
 
-`--registry public` exercises the provider as consumers get it (`registry pull k8s`); everything else is identical, so it doubles as the post-publish verification.
+`--live` exercises the provider as consumers get it (`registry pull k8s`); everything else is identical, so it doubles as the post-publish verification. The `make` smoke targets source a gitignored `.env` file if present (`KUBE_HOST`, `KUBE_PROTOCOL`, `KUBE_TOKEN`). Against a kind cluster the suite costs $0.
 
 ### Getting a cheap real cluster
 
@@ -427,7 +485,7 @@ For smoke tests beyond kind, from cheapest up - the first two dogfood StackQL's 
 
 ### CI
 
-The GitHub Actions workflow builds the provider for each supported Kubernetes minor release, runs the integration tests against the mock server, stands up a matching kind cluster, seeds `tests/fixtures/seed.yaml`, and runs the meta-route tests plus the smoke suite. See `.github/workflows/build-and-test.yml`.
+The GitHub Actions workflow ([.github/workflows/build-and-test.yml](.github/workflows/build-and-test.yml)) rebuilds the provider from the pinned release specs on every push and PR (`make build`), fails on any uncommitted generation drift, and runs the offline, integration (mock kube-apiserver), and meta-route layers (`make test`). On pushes it then stands up a kind cluster matching the pinned minor release, seeds `tests/fixtures/seed.yaml`, and runs the smoke suite (`make smoke`) through `kubectl proxy` - the whole chain is credential-free and costs nothing. The docs microsite deploys separately via the web workflows.
 
 ## Service Coverage
 
@@ -469,7 +527,7 @@ export DEV_REG="{ \"url\": \"https://registry-dev.stackql.app/providers\" }"
 registry pull k8s;
 ```
 
-## 8. Generate Web Docs
+## 8. Generate Web Docs (`make docs website`)
 
 The doc microsite (`website/`) is Docusaurus 3.10 and follows the shared architecture used by the other provider microsites: all navbar/footer/theme/plugin configuration lives in [`stackql/docusaurus-config`](https://github.com/stackql/docusaurus-config), which is vendored into `.shared-config/` at build time (the `vendor-config` script runs automatically before `start`/`build`). Site-local files are limited to the provider identity (`website/provider.js`), thin wrappers (`docusaurus.config.js`, `sidebars.js`), the shared components/theme under `src/`, and static assets (including `static/CNAME` for the custom domain).
 

@@ -20,7 +20,7 @@ http), which works with any cluster your kubeconfig can reach:
 
 Direct access with a bearer token (no proxy):
 
-    export K8S_TOKEN=$(kubectl create token stackql-smoke-sa)
+    export KUBE_TOKEN=$(kubectl create token stackql-smoke-sa)
     python tests/smoke_test.py --cluster-addr <host>:<port> --protocol https
 
 NOTE: cluster_addr must currently be a dot-free hostname (e.g. localhost,
@@ -199,6 +199,23 @@ class Smoke:
             expect_rows=True,
         )
         self.step(
+            "services all namespaces",
+            f"SELECT json_extract(metadata, '$.name') AS name, json_extract(spec, '$.type') AS type "
+            f"FROM k8s.core.services_all_namespaces WHERE {self.where}",
+            expect_rows=True, contains="kubernetes",
+        )
+        self.step(
+            "deployments all namespaces",
+            f"SELECT json_extract(metadata, '$.name') AS name FROM k8s.apps.deployments_all_namespaces WHERE {self.where}",
+            expect_rows=True, contains="coredns",
+        )
+        self.step(
+            "pods filtered by label_selector (snake param, server-side filter)",
+            f"SELECT json_extract(metadata, '$.name') AS name FROM k8s.core.pods_all_namespaces "
+            f"WHERE label_selector = 'k8s-app=kube-dns' AND {self.where}",
+            expect_rows=True, contains="coredns",
+        )
+        self.step(
             "apps api_resources (group discovery)",
             f"SELECT name, kind, namespaced FROM k8s.apps.api_resources WHERE {self.where}",
             expect_rows=True, contains="Deployment",
@@ -354,12 +371,16 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="k8s provider smoke test")
     ap.add_argument("--registry", choices=["local", "public"], default="local",
                     help="local = provider-dev/openapi file registry (default); public = default stackql registry")
+    ap.add_argument("--live", action="store_true",
+                    help="shorthand for --registry public: run against the live published provider")
     ap.add_argument("--cluster-addr", default="localhost:8001",
                     help="host:port of the API server endpoint (default: localhost:8001, i.e. kubectl proxy)")
     ap.add_argument("--protocol", choices=["http", "https"], default="http")
     ap.add_argument("--cleanup-only", action="store_true", help="sweep stackql-smoke-* namespaces and exit")
     ap.add_argument("--skip-deployment", action="store_true", help="configmap lifecycle only")
     args = ap.parse_args()
+    if args.live:
+        args.registry = "public"
 
     smoke = Smoke(args)
     print(f"k8s smoke test  registry={args.registry}  target={args.protocol}://{args.cluster_addr}  ns={smoke.ns}")

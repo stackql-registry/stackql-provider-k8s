@@ -10,14 +10,14 @@ The provider is a general-purpose artifact pointable at any Kubernetes cluster. 
 
 ## What this repo does
 
-The build pipeline transforms upstream Kubernetes OpenAPI specs into StackQL provider schemas using `@stackql/provider-utils`:
+The build pipeline transforms upstream Kubernetes OpenAPI specs into StackQL provider schemas using `@stackql/provider-utils`. Every stage is a `make` target (see `Makefile` - the servers/provider/service config JSON lives there); `make all` runs the full non-cluster chain (deps -> build -> test -> docs -> website) and `make help` lists everything:
 
 1. **Download** - fetch per-group OpenAPI v3 specs listed in `provider-dev/config/spec_manifest.txt` from the pinned release branch (see README step 1)
 2. **Split** - `npm run split` normalises specs into per-service StackQL service specs in `provider-dev/source/` (group -> service name mapping in `provider-dev/config/service_names.json`)
 3. **Map** - `npm run generate-mappings` produces a boilerplate `provider-dev/config/all_services.csv`; `node provider-dev/scripts/map_operations.mjs` then populates the resource, method, SQL verb, and object key columns mechanically from the `x-kubernetes-action` / `x-kubernetes-group-version-kind` extensions (mapping rule changes go in the script, not the CSV)
 4. **Normalize** - `node provider-dev/scripts/pre_normalize.mjs` (k8s-specific: `IntOrString` -> `type: string`) then `npm run normalize` lowers polymorphism in place in `provider-dev/source`: `oneOf`/`anyOf` -> `allOf`, all `allOf` flattened, opaque objects -> JSON-blob strings, path-item params lifted onto operations (StackQL is relational - no polymorphism). Changes schemas only, never paths/verbs/operations
-5. **Generate** - `npm run generate-provider` emits the final provider to `provider-dev/openapi/src/k8s/` (service-level `x-stackQL-config` via `--service-config` carries the `continue`-token pagination semantics and `limit` pushdown - service level because provider-level pagination inheritance is broken in any-sdk), then `node provider-dev/scripts/post_process.mjs` fixes response media types (cbor -> json), patch request bindings (merge-patch+json bound to the kind schema), and json request bindings - always run it after regeneration
-6. **Test** - `npm run test-integration` (mock kube-apiserver, no cluster needed - run after every regeneration); `npm run test-meta-routes` verifies services/resources/methods resolve; `tests/smoke_test.py` (pystackql) runs read smokes + a full write lifecycle against a real cluster via `kubectl proxy`, with `--registry public` for the published provider
+5. **Generate** - `make generate` emits the final provider to `provider-dev/openapi/src/k8s/` (service-level `x-stackQL-config` via `--service-config` carries the `continue`-token pagination semantics and `limit` pushdown - service level because provider-level pagination inheritance is broken in any-sdk; provider config sets `snake_case_aliases: true`; server variables default from `KUBE_HOST`/`KUBE_PROTOCOL` via `x-stackQL-envVar`), then runs `node provider-dev/scripts/post_process.mjs` which fixes response media types (cbor -> json), patch request bindings (merge-patch+json bound to the kind schema), and json request bindings - always run it after regeneration
+6. **Test** - `make test` = offline SHOW/DESCRIBE checks + `npm run test-integration` (mock kube-apiserver, no cluster needed - run after every regeneration) + `npm run test-meta-routes` (verifies services/resources/methods resolve); `make smoke` (pystackql, venv created on demand) runs read smokes + a full write lifecycle against a real cluster via `kubectl proxy`, with `make smoke-live` (`--live`) for the published provider; smoke targets source `.env` if present
 7. **Publish** - provider is pushed to `providers/src` in [`stackql-provider-registry`](https://github.com/stackql/stackql-provider-registry); docs microsite (Docusaurus, `website/`) publishes to https://k8s-provider.stackql.io via GitHub Pages
 
 The README documents each step with full commands. Follow it as the source of truth for the pipeline.
@@ -41,7 +41,8 @@ website/                   Docusaurus 3.10 doc microsite - shared config vendore
 - Namespaced list-all operations are separate resources with the `_all_namespaces` suffix (`pods_all_namespaces`)
 - Subresources are separate resources suffixed by subresource name (`deployments_scale`, `pods_log`)
 - Verb mapping: list/read -> `SELECT`, create -> `INSERT`, replace -> `REPLACE`, patch -> `UPDATE`, delete/deletecollection -> `DELETE`
-- `cluster_addr` and `protocol` are server variables supplied in the `WHERE` clause of queries; auth is `null_auth` (kubectl proxy) or bearer token at the StackQL runtime level
+- `cluster_addr` and `protocol` are server variables supplied in the `WHERE` clause of queries, or defaulted from `KUBE_HOST`/`KUBE_PROTOCOL` via `x-stackQL-envVar` (explicit `WHERE` wins); auth is `null_auth` (kubectl proxy) or bearer token at the StackQL runtime level (`KUBE_TOKEN` by convention, matching Terraform)
+- SELECT/DESCRIBE columns are snake_case aliases of camelCase wire properties (`roleRef` -> `role_ref`) via `snake_case_aliases: true` in the provider config; nested `json_extract` paths stay wire-format camelCase
 - INSERT/UPDATE/REPLACE body columns are native wire property names (`metadata`, `spec`, `data`) via the naive request body translator (`--naive-req-body-translate`), NOT `data__` prefixed; snake_case aliases of camelCase wire names are accepted
 
 ## Things to know

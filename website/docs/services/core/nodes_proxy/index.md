@@ -139,7 +139,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-cluster_addr">
     <td><CopyableCode code="cluster_addr" /></td>
     <td><code>string</code></td>
-    <td>(default: localhost)</td>
+    <td>(default: localhost, x-stackQL-envVar: KUBE_HOST)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
@@ -154,7 +154,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-protocol">
     <td><CopyableCode code="protocol" /></td>
     <td><code>string</code></td>
-    <td>(default: https, enum: &#91;https, http&#93;)</td>
+    <td>(default: https, enum: &#91;https, http&#93;, x-stackQL-envVar: KUBE_PROTOCOL)</td>
 </tr>
 <tr id="parameter-path">
     <td><CopyableCode code="path" /></td>
@@ -165,6 +165,8 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 </table>
 
 ## Lifecycle Methods
+
+EXEC variables use wire (API) names.
 
 <Tabs
     defaultValue="connect_delete"

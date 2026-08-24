@@ -27,6 +27,24 @@ AND cluster_addr = 'localhost:8001'
 AND namespace = 'default';
 ```
 
+Both parameters can be defaulted from environment variables, removing them from the `WHERE` clause entirely:
+
+- <CopyableCode code="KUBE_HOST" /> - default for `cluster_addr`; the hostname and port only, with no scheme (this differs from the Terraform variable of the same name, which takes a full URI)
+- <CopyableCode code="KUBE_PROTOCOL" /> - default for `protocol`
+
+```bash
+export KUBE_HOST='localhost:8001'
+export KUBE_PROTOCOL='http'
+```
+
+```sql
+SELECT json_extract(metadata, '$.name') AS name
+FROM k8s.core.pods
+WHERE namespace = 'default';
+```
+
+An explicit `WHERE` value always takes precedence over the environment variable.
+
 > `cluster_addr` must currently be a dot-free hostname (`localhost`, or a hosts-file alias for a remote endpoint) - bare IP addresses and fully qualified domain names are not yet supported for direct connections. The `kubectl proxy` workflow below is unaffected.
 
 ## Authentication
@@ -55,12 +73,12 @@ This works with any cluster your `kubectl` can reach and is the recommended vect
 
 <summary>Direct access using a bearer token</summary>
 
-To connect directly to the API server (no proxy), supply a bearer token via the `--auth` flag using the <CopyableCode code="K8S_TOKEN" /> environment variable, along with the cluster CA bundle:
+To connect directly to the API server (no proxy), supply a bearer token via the `--auth` flag using the <CopyableCode code="KUBE_TOKEN" /> environment variable (the same variable the Terraform `kubernetes` provider uses), along with the cluster CA bundle:
 
 ```bash
 
-export K8S_TOKEN='eyJhbGciOiJ...'
-AUTH='{ "k8s": { "type": "bearer", "credentialsenvvar": "K8S_TOKEN" }}'
+export KUBE_TOKEN='eyJhbGciOiJ...'
+AUTH='{ "k8s": { "type": "bearer", "credentialsenvvar": "KUBE_TOKEN" }}'
 stackql shell --auth="${AUTH}" --tls.CABundle cluster-ca.pem
 
 ```
@@ -68,8 +86,8 @@ or using PowerShell:
 
 ```powershell
 
-$env:K8S_TOKEN = 'eyJhbGciOiJ...'
-$Auth = "{ 'k8s': { 'type': 'bearer', 'credentialsenvvar': 'K8S_TOKEN' }}"
+$env:KUBE_TOKEN = 'eyJhbGciOiJ...'
+$Auth = "{ 'k8s': { 'type': 'bearer', 'credentialsenvvar': 'KUBE_TOKEN' }}"
 stackql.exe shell --auth=$Auth --tls.CABundle cluster-ca.pem
 
 ```
@@ -77,9 +95,111 @@ stackql.exe shell --auth=$Auth --tls.CABundle cluster-ca.pem
 A service account token can be created with `kubectl create token <serviceaccount>`. For managed clusters, obtain a token from the platform credential helper and pass it the same way, for example:
 
 ```bash
-export K8S_TOKEN=$(aws eks get-token --cluster-name my-cluster | jq -r .status.token)
+export KUBE_TOKEN=$(aws eks get-token --cluster-name my-cluster | jq -r .status.token)
 ```
 
 > Tokens issued by cloud credential helpers are short lived (typically 15 minutes) and are not refreshed automatically - for long running sessions prefer the `kubectl proxy` vector. Client certificate (mTLS) authentication and native kubeconfig resolution are not currently supported; use `kubectl proxy` for those clusters. Alternatively `--tls.allowInsecure=true` skips CA verification (not recommended).
 
 </details>
+
+## Getting started
+
+Row columns are the top-level fields of each Kubernetes object (`metadata`, `spec`, `status`, ...); nested values are addressed with `json_extract`. The queries below assume `KUBE_HOST` and `KUBE_PROTOCOL` are set (or add `protocol` and `cluster_addr` to each `WHERE` clause).
+
+## Pod estate
+
+All pods in the cluster with their phase and node placement:
+
+```sql
+SELECT json_extract(metadata, '$.namespace') AS namespace,
+       json_extract(metadata, '$.name') AS name,
+       json_extract(status, '$.phase') AS phase,
+       json_extract(spec, '$.nodeName') AS node
+FROM k8s.core.pods_all_namespaces;
+```
+
+Pods that are not running - a one-line cluster health check:
+
+```sql
+SELECT json_extract(metadata, '$.namespace') AS namespace,
+       json_extract(metadata, '$.name') AS name,
+       json_extract(status, '$.phase') AS phase
+FROM k8s.core.pods_all_namespaces
+WHERE json_extract(status, '$.phase') NOT IN ('Running', 'Succeeded');
+```
+
+## Deployment rollout state
+
+Desired versus ready replicas for every deployment in a namespace:
+
+```sql
+SELECT json_extract(metadata, '$.name') AS name,
+       json_extract(spec, '$.replicas') AS want,
+       json_extract(status, '$.readyReplicas') AS ready
+FROM k8s.apps.deployments
+WHERE namespace = 'default';
+```
+
+## Node inventory
+
+Kubelet version, OS image, and schedulability per node:
+
+```sql
+SELECT json_extract(metadata, '$.name') AS name,
+       json_extract(status, '$.nodeInfo.kubeletVersion') AS kubelet,
+       json_extract(status, '$.nodeInfo.osImage') AS os,
+       json_extract(spec, '$.unschedulable') AS cordoned
+FROM k8s.core.nodes;
+```
+
+## RBAC audit
+
+Who is bound to `cluster-admin`:
+
+```sql
+SELECT json_extract(metadata, '$.name') AS binding,
+       subjects
+FROM k8s.rbac.cluster_role_bindings
+WHERE json_extract(role_ref, '$.name') = 'cluster-admin';
+```
+
+## Warning events
+
+Recent warning events across the cluster, most likely the first place to look when something is off:
+
+```sql
+SELECT json_extract(metadata, '$.namespace') AS namespace,
+       reason,
+       message
+FROM k8s.core.events_all_namespaces
+WHERE type = 'Warning';
+```
+
+## Provision, mutate and tear down
+
+Mutations use the same SQL grammar - `INSERT` creates an object, `UPDATE` applies a merge patch, `REPLACE` performs a full update and `DELETE` removes it. Body columns are the native wire property names (`metadata`, `spec`, `data`). A configmap end to end:
+
+```sql
+-- create
+INSERT INTO k8s.core.config_maps(namespace, metadata, data)
+SELECT 'default', '{"name": "app-config"}', '{"greeting": "hello"}';
+
+-- partial update (merge patch)
+UPDATE k8s.core.config_maps
+SET data = '{"mood": "optimistic"}'
+WHERE namespace = 'default' AND name = 'app-config';
+
+-- remove it
+DELETE FROM k8s.core.config_maps
+WHERE namespace = 'default' AND name = 'app-config';
+```
+
+Subresources are first-class resources - scale a deployment through its `scale` subresource:
+
+```sql
+UPDATE k8s.apps.deployments_scale
+SET spec = '{"replicas": 3}'
+WHERE namespace = 'default' AND name = 'web';
+```
+
+`SELECT ... LIMIT n` is pushed down to the API server as the Kubernetes `limit` parameter, and list pagination (`continue` tokens) is traversed transparently - a `SELECT` returns all rows even when the API server caps page sizes.

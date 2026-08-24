@@ -17,6 +17,11 @@ const config = createConfig({
   },
 });
 
+// Date-stamp every doc page ("Last updated on ...") - the shared config
+// ships showLastUpdateTime: false, so flip it here. Docs are generated and
+// committed, so git history supplies the timestamps.
+config.presets[0][1].docs.showLastUpdateTime = true;
+
 // Use the locally vendored registry-branded logos (STACKQL>> | REGISTRY,
 // matching the awscc microsite) instead of the shared config's hotlinked
 // main-site wordmark - self-contained assets, no cross-origin fetch.

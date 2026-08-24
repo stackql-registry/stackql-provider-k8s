@@ -49,6 +49,11 @@ The following fields are returned by `SELECT` queries:
     </tr>
 </thead>
 <tbody>
+<tr>
+    <td><CopyableCode code="log" /></td>
+    <td><code>string</code></td>
+    <td></td>
+</tr>
 </tbody>
 </table>
 </TabItem>
@@ -73,7 +78,7 @@ The following methods are available for this resource:
     <td><a href="#get"><CopyableCode code="get" /></a></td>
     <td><CopyableCode code="select" /></td>
     <td><a href="#parameter-name"><code>name</code></a>, <a href="#parameter-namespace"><code>namespace</code></a>, <a href="#parameter-protocol"><code>protocol</code></a>, <a href="#parameter-cluster_addr"><code>cluster_addr</code></a></td>
-    <td><a href="#parameter-container"><code>container</code></a>, <a href="#parameter-follow"><code>follow</code></a>, <a href="#parameter-insecureSkipTLSVerifyBackend"><code>insecureSkipTLSVerifyBackend</code></a>, <a href="#parameter-limitBytes"><code>limitBytes</code></a>, <a href="#parameter-pretty"><code>pretty</code></a>, <a href="#parameter-previous"><code>previous</code></a>, <a href="#parameter-sinceSeconds"><code>sinceSeconds</code></a>, <a href="#parameter-stream"><code>stream</code></a>, <a href="#parameter-tailLines"><code>tailLines</code></a>, <a href="#parameter-timestamps"><code>timestamps</code></a></td>
+    <td><a href="#parameter-container"><code>container</code></a>, <a href="#parameter-follow"><code>follow</code></a>, <a href="#parameter-insecure_skip_tls_verify_backend"><code>insecure_skip_tls_verify_backend</code></a>, <a href="#parameter-limit_bytes"><code>limit_bytes</code></a>, <a href="#parameter-pretty"><code>pretty</code></a>, <a href="#parameter-previous"><code>previous</code></a>, <a href="#parameter-since_seconds"><code>since_seconds</code></a>, <a href="#parameter-stream"><code>stream</code></a>, <a href="#parameter-tail_lines"><code>tail_lines</code></a>, <a href="#parameter-timestamps"><code>timestamps</code></a></td>
     <td>read log of the specified Pod</td>
 </tr>
 </tbody>
@@ -95,7 +100,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-cluster_addr">
     <td><CopyableCode code="cluster_addr" /></td>
     <td><code>string</code></td>
-    <td>(default: localhost)</td>
+    <td>(default: localhost, x-stackQL-envVar: KUBE_HOST)</td>
 </tr>
 <tr id="parameter-name">
     <td><CopyableCode code="name" /></td>
@@ -110,7 +115,7 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
 <tr id="parameter-protocol">
     <td><CopyableCode code="protocol" /></td>
     <td><code>string</code></td>
-    <td>(default: https, enum: &#91;https, http&#93;)</td>
+    <td>(default: https, enum: &#91;https, http&#93;, x-stackQL-envVar: KUBE_PROTOCOL)</td>
 </tr>
 <tr id="parameter-container">
     <td><CopyableCode code="container" /></td>
@@ -122,15 +127,15 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><code>boolean</code></td>
     <td>Follow the log stream of the pod. Defaults to false.</td>
 </tr>
-<tr id="parameter-insecureSkipTLSVerifyBackend">
-    <td><CopyableCode code="insecureSkipTLSVerifyBackend" /></td>
+<tr id="parameter-insecure_skip_tls_verify_backend">
+    <td><CopyableCode code="insecure_skip_tls_verify_backend" /></td>
     <td><code>boolean</code></td>
-    <td>insecureSkipTLSVerifyBackend indicates that the apiserver should not confirm the validity of the serving certificate of the backend it is connecting to.  This will make the HTTPS connection between the apiserver and the backend insecure. This means the apiserver cannot verify the log data it is receiving came from the real kubelet.  If the kubelet is configured to verify the apiserver's TLS credentials, it does not mean the connection to the real kubelet is vulnerable to a man in the middle attack (e.g. an attacker could not intercept the actual log data coming from the real kubelet).</td>
+    <td>insecureSkipTLSVerifyBackend indicates that the apiserver should not confirm the validity of the serving certificate of the backend it is connecting to.  This will make the HTTPS connection between the apiserver and the backend insecure. This means the apiserver cannot verify the log data it is receiving came from the real kubelet.  If the kubelet is configured to verify the apiserver's TLS credentials, it does not mean the connection to the real kubelet is vulnerable to a man in the middle attack (e.g. an attacker could not intercept the actual log data coming from the real kubelet). (wire: insecureSkipTLSVerifyBackend)</td>
 </tr>
-<tr id="parameter-limitBytes">
-    <td><CopyableCode code="limitBytes" /></td>
+<tr id="parameter-limit_bytes">
+    <td><CopyableCode code="limit_bytes" /></td>
     <td><code>integer</code></td>
-    <td>If set, the number of bytes to read from the server before terminating the log output. This may not display a complete final line of logging, and may return slightly more or slightly less than the specified limit.</td>
+    <td>If set, the number of bytes to read from the server before terminating the log output. This may not display a complete final line of logging, and may return slightly more or slightly less than the specified limit. (wire: limitBytes)</td>
 </tr>
 <tr id="parameter-pretty">
     <td><CopyableCode code="pretty" /></td>
@@ -142,20 +147,20 @@ Parameters can be passed in the `WHERE` clause of a query. Check the [Methods](#
     <td><code>boolean</code></td>
     <td>Return previous terminated container logs. Defaults to false.</td>
 </tr>
-<tr id="parameter-sinceSeconds">
-    <td><CopyableCode code="sinceSeconds" /></td>
+<tr id="parameter-since_seconds">
+    <td><CopyableCode code="since_seconds" /></td>
     <td><code>integer</code></td>
-    <td>A relative time in seconds before the current time from which to show logs. If this value precedes the time a pod was started, only logs since the pod start will be returned. If this value is in the future, no logs will be returned. Only one of sinceSeconds or sinceTime may be specified.</td>
+    <td>A relative time in seconds before the current time from which to show logs. If this value precedes the time a pod was started, only logs since the pod start will be returned. If this value is in the future, no logs will be returned. Only one of sinceSeconds or sinceTime may be specified. (wire: sinceSeconds)</td>
 </tr>
 <tr id="parameter-stream">
     <td><CopyableCode code="stream" /></td>
     <td><code>string</code></td>
     <td>Specify which container log stream to return to the client. Acceptable values are "All", "Stdout" and "Stderr". If not specified, "All" is used, and both stdout and stderr are returned interleaved. Note that when "TailLines" is specified, "Stream" can only be set to nil or "All".</td>
 </tr>
-<tr id="parameter-tailLines">
-    <td><CopyableCode code="tailLines" /></td>
+<tr id="parameter-tail_lines">
+    <td><CopyableCode code="tail_lines" /></td>
     <td><code>integer</code></td>
-    <td>If set, the number of lines from the end of the logs to show. If not specified, logs are shown from the creation of the container or sinceSeconds or sinceTime. Note that when "TailLines" is specified, "Stream" can only be set to nil or "All".</td>
+    <td>If set, the number of lines from the end of the logs to show. If not specified, logs are shown from the creation of the container or sinceSeconds or sinceTime. Note that when "TailLines" is specified, "Stream" can only be set to nil or "All". (wire: tailLines)</td>
 </tr>
 <tr id="parameter-timestamps">
     <td><CopyableCode code="timestamps" /></td>
@@ -179,7 +184,7 @@ read log of the specified Pod
 
 ```sql
 SELECT
-*
+log
 FROM k8s.core.pods_log
 WHERE name = '{{ name }}' -- required
 AND namespace = '{{ namespace }}' -- required
@@ -187,13 +192,13 @@ AND protocol = '{{ protocol }}' -- required
 AND cluster_addr = '{{ cluster_addr }}' -- required
 AND container = '{{ container }}'
 AND follow = '{{ follow }}'
-AND insecureSkipTLSVerifyBackend = '{{ insecureSkipTLSVerifyBackend }}'
-AND limitBytes = '{{ limitBytes }}'
+AND insecure_skip_tls_verify_backend = '{{ insecure_skip_tls_verify_backend }}'
+AND limit_bytes = '{{ limit_bytes }}'
 AND pretty = '{{ pretty }}'
 AND previous = '{{ previous }}'
-AND sinceSeconds = '{{ sinceSeconds }}'
+AND since_seconds = '{{ since_seconds }}'
 AND stream = '{{ stream }}'
-AND tailLines = '{{ tailLines }}'
+AND tail_lines = '{{ tail_lines }}'
 AND timestamps = '{{ timestamps }}'
 ;
 ```

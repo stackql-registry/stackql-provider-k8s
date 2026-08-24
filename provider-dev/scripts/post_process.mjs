@@ -42,7 +42,7 @@ function decodeOperationRef(ref) {
   return [pathKey, verb];
 }
 
-let totals = { responseMedia: 0, patchRequests: 0, jsonRequests: 0, reviewBodies: 0, logTransforms: 0, files: 0 };
+let totals = { responseMedia: 0, patchRequests: 0, jsonRequests: 0, reviewBodies: 0, logTransforms: 0, casedMethods: 0, files: 0 };
 
 for (const filename of fs.readdirSync(servicesDir).filter((f) => f.endsWith('.yaml')).sort()) {
   const filePath = path.join(servicesDir, filename);
@@ -106,6 +106,19 @@ for (const filename of fs.readdirSync(servicesDir).filter((f) => f.endsWith('.ya
         }
       }
 
+      // 3b. nativeCasing: camel on EVERY method (not just body methods).
+      // With snake_case_aliases presenting snake columns, WHERE parameters
+      // must accept the snake spelling too (label_selector as well as
+      // labelSelector) - any-sdk's reverse-casing param resolution is
+      // gated on request.nativeCasing, and a request component without a
+      // mediaType is inert for body handling (clickhouse precedent, all
+      // methods, verified live).
+      if (!method.request?.nativeCasing) {
+        method.request = { ...(method.request || {}), nativeCasing: 'camel' };
+        totals.casedMethods++;
+        touched = true;
+      }
+
       // 4. review kinds (SELECT-over-POST): non-mutating authz/authn checks
       // mapped to SELECT. `base` merges under any WHERE-supplied body
       // members (spec, ...); `default` is the whole body when the SELECT
@@ -161,4 +174,4 @@ for (const filename of fs.readdirSync(servicesDir).filter((f) => f.endsWith('.ya
   }
 }
 
-console.log(`Done. ${totals.files} file(s): ${totals.responseMedia} response media type(s) -> application/json, ${totals.patchRequests} patch request binding(s) -> ${MERGE_PATCH}, ${totals.jsonRequests} json request binding(s), ${totals.reviewBodies} review body binding(s), ${totals.logTransforms} log transform(s)`);
+console.log(`Done. ${totals.files} file(s): ${totals.responseMedia} response media type(s) -> application/json, ${totals.patchRequests} patch request binding(s) -> ${MERGE_PATCH}, ${totals.jsonRequests} json request binding(s), ${totals.reviewBodies} review body binding(s), ${totals.logTransforms} log transform(s), ${totals.casedMethods} additional method(s) stamped nativeCasing: camel`);
