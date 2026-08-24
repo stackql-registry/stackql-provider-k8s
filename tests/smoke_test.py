@@ -59,7 +59,8 @@ ERROR_RE = re.compile(
     r"http response status code: [45]|over HTTP error|error assembling|"
     r"cannot find matching operation|FindRoute|no matching operation|"
     r"cannot find any viable servers|parser error|panic|"
-    r"no request body for operation|schema unsuitable",
+    r"no request body for operation|schema unsuitable|"
+    r"cannot find provider|providers not viable|try a pull from the registry",
     re.I,
 )
 
@@ -100,9 +101,23 @@ class Smoke:
                 if p == "--registry":
                     params[i + 1] = quoted
                     break
+            self.provider_version = "local (provider-dev/openapi)"
         else:
-            # public registry: requires the k8s provider to be published
+            # public registry: requires the k8s provider to be published.
+            # pystackql drives its own stackql binary with its own app root
+            # (not the CLI's), so pull the latest published provider into
+            # it here - stackql does not auto-pull, and a missing provider
+            # otherwise surfaces as silent empty result sets.
             self.sq = StackQL(output="dict")
+            self.provider_version = self.ensure_provider()
+
+    def ensure_provider(self) -> str:
+        self.sq.executeStmt("REGISTRY PULL k8s")
+        rows = self.sq.execute("SHOW PROVIDERS")
+        version = next((r.get("version") for r in rows if r.get("name") == "k8s"), None)
+        if not version:
+            sys.exit("k8s provider is not installed after REGISTRY PULL k8s - is it published?")
+        return version
 
     # ------------------------------------------------------------------ core
     def q(self, sql: str):
@@ -383,7 +398,8 @@ def main() -> int:
         args.registry = "public"
 
     smoke = Smoke(args)
-    print(f"k8s smoke test  registry={args.registry}  target={args.protocol}://{args.cluster_addr}  ns={smoke.ns}")
+    print(f"k8s smoke test  registry={args.registry}  provider={smoke.provider_version}  "
+          f"stackql={smoke.sq.version}  target={args.protocol}://{args.cluster_addr}  ns={smoke.ns}")
     smoke.cleanup_breadcrumbs()
     if args.cleanup_only:
         return 0
