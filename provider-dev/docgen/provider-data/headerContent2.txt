@@ -102,11 +102,11 @@ export KUBE_TOKEN=$(aws eks get-token --cluster-name my-cluster | jq -r .status.
 
 </details>
 
-## Getting started
+## Example Queries
 
-Row columns are the top-level fields of each Kubernetes object (`metadata`, `spec`, `status`, ...); nested values are addressed with `json_extract`. The queries below assume `KUBE_HOST` and `KUBE_PROTOCOL` are set (or add `protocol` and `cluster_addr` to each `WHERE` clause).
+Try the following queries using `stackql shell`, or run them from a script or CI pipeline with `stackql exec`. Row columns are the top-level fields of each Kubernetes object (`metadata`, `spec`, `status`, ...); nested values are addressed with `json_extract`. The queries below assume `KUBE_HOST` and `KUBE_PROTOCOL` are set (or add `protocol` and `cluster_addr` to each `WHERE` clause).
 
-## Pod estate
+### Pod estate
 
 All pods in the cluster with their phase and node placement:
 
@@ -128,7 +128,7 @@ FROM k8s.core.pods_all_namespaces
 WHERE json_extract(status, '$.phase') NOT IN ('Running', 'Succeeded');
 ```
 
-## Deployment rollout state
+### Deployment rollout state
 
 Desired versus ready replicas for every deployment in a namespace:
 
@@ -140,7 +140,7 @@ FROM k8s.apps.deployments
 WHERE namespace = 'default';
 ```
 
-## Node inventory
+### Node inventory
 
 Kubelet version, OS image, and schedulability per node:
 
@@ -152,7 +152,7 @@ SELECT json_extract(metadata, '$.name') AS name,
 FROM k8s.core.nodes;
 ```
 
-## RBAC audit
+### RBAC audit
 
 Who is bound to `cluster-admin`:
 
@@ -163,7 +163,7 @@ FROM k8s.rbac.cluster_role_bindings
 WHERE json_extract(role_ref, '$.name') = 'cluster-admin';
 ```
 
-## Warning events
+### Warning events
 
 Recent warning events across the cluster, most likely the first place to look when something is off:
 
@@ -175,7 +175,7 @@ FROM k8s.core.events_all_namespaces
 WHERE type = 'Warning';
 ```
 
-## Provision, mutate and tear down
+### Provision, mutate and tear down
 
 Mutations use the same SQL grammar - `INSERT` creates an object, `UPDATE` applies a merge patch, `REPLACE` performs a full update and `DELETE` removes it. Body columns are the native wire property names (`metadata`, `spec`, `data`). A configmap end to end:
 
