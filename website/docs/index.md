@@ -24,6 +24,7 @@ Query, provision and operate Kubernetes cluster resources - pods, deployments, s
 
 total services: __20__  
 total resources: __172__  
+source project: __[stackql-provider-k8s](https://github.com/stackql-registry/stackql-provider-k8s)__  
 
 :::
 

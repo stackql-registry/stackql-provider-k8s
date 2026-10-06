@@ -15,6 +15,7 @@ async function generateDocs() {
   const outputDir = getArg('--output-dir');
   const providerDataDir = getArg('--provider-data-dir');
   const snakeCaseAliases = args.includes('--snake-case-aliases');
+  const sourceProject = getArg('--source-project');
 
   if (!providerName || !providerDir || !outputDir || !providerDataDir) {
     console.error('Error: Missing required arguments');
@@ -33,7 +34,8 @@ async function generateDocs() {
       providerDir,
       outputDir,
       providerDataDir,
-      snakeCaseAliases
+      snakeCaseAliases,
+      sourceProject
     });
     
     console.log('Documentation generated successfully:', result);

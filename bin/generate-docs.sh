@@ -30,6 +30,10 @@ while [[ $# -gt 0 ]]; do
       SNAKE_CASE_ALIASES=true
       shift
       ;;
+    --source-project)
+      SOURCE_PROJECT="$2"
+      shift 2
+      ;;
     --help)
       echo "Usage: generate-docs.sh [OPTIONS]"
       echo ""
@@ -38,6 +42,7 @@ while [[ $# -gt 0 ]]; do
       echo "  --provider-dir DIR        Provider directory path (default: $PROVIDER_DIR)"
       echo "  --output-dir DIR          Output directory for docs (default: $OUTPUT_DIR)"
       echo "  --provider-data-dir DIR   Provider data directory (default: $PROVIDER_DATA_DIR)"
+      echo "  --source-project URL      Repository URL linked from the provider summary"
       echo "  --help                    Show this help message"
       exit 0
       ;;
@@ -57,7 +62,8 @@ node --experimental-modules "$SCRIPT_DIR/generate-docs.mjs" \
   --provider-dir "$PROVIDER_DIR" \
   --output-dir "$OUTPUT_DIR" \
   --provider-data-dir "$PROVIDER_DATA_DIR" \
-  ${SNAKE_CASE_ALIASES:+--snake-case-aliases}
+  ${SNAKE_CASE_ALIASES:+--snake-case-aliases} \
+  ${SOURCE_PROJECT:+--source-project "$SOURCE_PROJECT"}
 
 # Check if command succeeded
 if [ $? -ne 0 ]; then
